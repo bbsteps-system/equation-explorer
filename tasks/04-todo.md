@@ -29,7 +29,7 @@
 
 - [x] **Task 3: Add the resilient Web Audio celebration chime**
   - **Depends on:** Task 1.
-  - **Acceptance:** The final Check flow makes one short, low-volume synthesized chime attempt using `AudioContext`/`webkitAudioContext`. Construction, `resume()`, scheduling, and `close()` failures are caught silently; no error UI appears and success still completes. Audio is never attempted from load, render, reset, or self-checks. No visible sound toggle is added. Reset closes the retained context and clears the reference.
+  - **Acceptance:** The final Check flow makes one short, bright, clearly audible synthesized fanfare attempt using `AudioContext`/`webkitAudioContext`. It uses an ascending C-major arpeggio and final high chord, remains below clipping, and is louder than the initial quiet three-note chime. Construction, `resume()`, scheduling, and `close()` failures are caught silently; no error UI appears and success still completes. Audio is never attempted from load, render, reset, or self-checks. No visible sound toggle is added. Reset closes the retained context and clears the reference.
   - **Verify:** Complete normally with audio available; repeat with a stubbed constructor that throws, with `resume()` rejecting, and with the API removed; confirm the panel, confetti, reset, and console remain correct. Inspect the reset path for a closed/null context.
   - **Files:** `index.html`, `tasks/04-todo.md`.
 
@@ -98,7 +98,8 @@ Automated evidence collected 2026-11-07. Task 7's human release gate is still re
 - Keyboard-only result: Typed `x = 5.5`, submitted with Enter, tabbed `select-left → select-right → x token → 5.5 token → Check`, pressed Enter, landed on the completion panel, tabbed to “Solve another!”, and pressed Enter to reset and focus the input.
 - Screen-reader result: Not tested with an actual screen reader. Automated inspection confirmed a named `region`, labelled/described content, panel focus, decorative confetti hidden from assistive technology, and no duplicate completion live-region announcement.
 - Reduced-motion result: Emulated `prefers-reduced-motion: reduce` produced zero confetti nodes/pieces while the static mark, heading, praise, answer, and button remained; error text/state remained and animation duration was `1e-05s`.
-- Audio-available result: Real `AudioContext` completion and reset completed without console errors.
+- Audio-available result: Real `AudioContext` completion and reset completed without console errors. The final fanfare is a six-note C-major arpeggio plus high chord; per-note peaks are 0.16–0.20 with 0.36 maximum combined peak, so it is substantially louder than the earlier 0.06 chime without clipping.
+- Fanfare schedule result (2026-11-07): A 15-check CDP stub-audio pass verified six triangle-wave notes at C5/E5/G5/C6/E6/G6, the intended arpeggio/final-chord timing and peaks, sub-800 ms duration, one-time replay protection, reset context closure, clean console, and `runMathSelfChecks()` 70/70.
 - Audio-blocked/failure result: Throwing constructor, rejected `resume()`, and missing audio API each left the panel, confetti, reset, and history intact with no console errors.
 - Console result: No uncaught exceptions or console errors across main, edge, regression, keyboard, direct-file, and static-server passes. No failed local network requests.
 - `runMathSelfChecks()` result: 70 passed, 0 failed.

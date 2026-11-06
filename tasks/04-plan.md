@@ -157,11 +157,11 @@ Behavior:
 
 ### Audio design
 
-Use one short synthesized chime, lazily created from the Check user gesture. No toggle in M4; the spec marks one optional.
+Use one short synthesized fanfare, lazily created from the Check user gesture. No toggle in M4; the spec marks one optional.
 
 - Prefer `window.AudioContext || window.webkitAudioContext`; return silently when neither exists.
 - `playCelebrationChime()` is wrapped in `try/catch`; the promise from `resume()` is also caught. Audio failure never changes UI state or logs an error.
-- Recommended signal: three short sine notes (for example C5, E5, G5), 80–100 ms apart, low gain, total under ~700 ms, with exponential gain ramps to avoid clicks.
+- Signal: a bright C-major arpeggio (C5, E5, G5, C6) with a final C-major chord (C6/E6/G6), using triangle waves with exponential gain ramps. It is noticeably louder than the initial quiet chime but keeps combined peak gain below clipping, with a total duration under ~800 ms.
 - Create nodes per chime; close or disconnect them as the sound finishes. Oscillators stop automatically.
 - Keep a single lazily created `AudioContext` for the session. `clearCelebration()` calls `close()` on reset, catches rejection, and sets the reference to `null`.
 - Launch the chime only from the final Check flow, never from render, load, self-checks, or reset.
@@ -260,6 +260,6 @@ The file is edited sequentially; slices are ordered to keep the app working afte
 1. M3 Task 8 human acceptance passes before M4 implementation starts.
 2. Completion panel uses a named focusable region (not an auto-announced status), removes `#final-status`, and places focus on the panel.
 3. Confetti uses DOM/CSS with 42 deterministic pieces, a 3.2 s cleanup timer, and no creation under reduced motion.
-4. Audio uses a low-volume three-note Web Audio chime, lazily created, with silent failure handling; **no visible sound toggle** in this release.
+4. Audio uses a bright six-note Web Audio fanfare—a rising C-major arpeggio plus final chord—at a clearly audible level, lazily created, with silent failure handling; **no visible sound toggle** in this release.
 5. Toolbox remains visible but disabled on completion; active editor remains hidden; top reset remains available.
 6. Confetti and audio launch only after the completed DOM renders, guarded by completed mode and `celebrationPlayed`.
