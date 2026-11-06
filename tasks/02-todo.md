@@ -2,7 +2,7 @@
 
 **Spec:** [`docs/specs/milestones/02-touch-token-workspace.md`](../docs/specs/milestones/02-touch-token-workspace.md)  
 **Plan:** [`tasks/02-plan.md`](02-plan.md)  
-**Status:** Complete — the reviewer confirmed the M2 human browser acceptance gate passed. Detailed browser/version and viewport evidence was not captured in this session.
+**Status:** Complete — the reviewer confirmed the M2 human browser acceptance gate passed. Detailed browser/version and viewport evidence was not captured in this session. Post-acceptance floating-toolbox and red-variable enhancements were added on 2026-11-07; their automated verification passed and a human visual check remains pending.
 
 ## Prerequisites
 
@@ -44,6 +44,18 @@
   - **Completion:** The reviewer confirmed the M2 human browser acceptance gate passed, including the documented mouse, touch/pointer, keyboard, responsive, accessibility, cancellation/reset, and locked-history paths. Detailed browser/version, viewport, and console/network notes were not retained in this session.
   - **Files:** `tasks/02-todo.md`.
 
+## Post-acceptance enhancement: Floating toolbox (2026-11-07)
+
+- [x] **Task 8: Keep the toolbox reachable while the solving path scrolls**
+  - **Completion:** `.toolbox-card` is sticky beneath the top edge while `mode === 'started'`, with safe-area-aware top offset and `z-index: 6`; it returns to the document flow at the top of the session and becomes static in `completed` mode. Below 600px it uses compact padding, hides the eyebrow/helper line, and retains its heading. A `ResizeObserver` publishes `--toolbox-sticky-height`; `scroll-padding-top` and `scroll-margin-top` reserve that height so focused tokens, selectors, feedback, and completion content remain clear. Post-edit focus uses `focus({ preventScroll: true })` plus `scrollIntoView({ block: 'nearest' })`.
+  - **Verification:** A 35-check headless Chrome/CDP suite passed at 320×600, 500×700, and 1280×700 CSS px. It confirmed sticky height/top values, compact vs. full header, no horizontal overflow, a real palette-to-side drag while pinned, focused inserted-token visibility, release to static completion mode, zero sticky reservation when complete, same-step regression (24/24), fanfare regression (15/15), syntax check, and `runMathSelfChecks()` 70/70 with no console errors. A human visual check is still pending.
+  - **Files:** `index.html`, `docs/specs/milestones/02-touch-token-workspace.md`, `docs/specs/linear-equation-drag-solver.md`, `tasks/02-todo.md`.
+
+- [x] **Task 9: Distinguish the variable `x` from multiplication `×`**
+  - **Completion:** The variable renders with a dedicated red (`--variable: #b91c1c`) and heavier weight in palette buttons, active workspace tokens, the submitted source display, every locked equation row, the orientation hint, and the completion answer. Multiplication remains the existing dark text color. Equation display strings are rebuilt with a text-preserving span helper, so layout, `textContent`, copy behavior, and accessible names are unchanged.
+  - **Verification:** A 12-check headless Chrome/CDP test confirmed the red CSS token, red palette and workspace `x`, dark `×`, unchanged source/locked equation text, red spans in displayed equations, the orientation hint, and `runMathSelfChecks()` 70/70 with no console errors. Same-step (24/24) and sticky-toolbox (35/35) regressions still pass.
+  - **Files:** `index.html`, `docs/specs/milestones/02-touch-token-workspace.md`, `docs/specs/linear-equation-drag-solver.md`, `tasks/02-todo.md`.
+
 ## Completion record
 
 The reviewer confirmed the M2 human acceptance gate passed. Detailed environment and observation notes were not retained in this session.
@@ -58,4 +70,6 @@ The reviewer confirmed the M2 human acceptance gate passed. Detailed environment
 - **Accessibility/live-feedback observations:** Passed; detailed observations not recorded.
 - **`runMathSelfChecks()` result:** Pure Node harness passed **51/51** with zero failures; browser DevTools result was reviewer-confirmed but not separately recorded.
 - **Canceled-drag/reset result:** Passed.
-- **Reviewer decision:** Passed — M2 accepted.
+- **Floating-toolbox result (2026-11-07):** Automated 35/35 pass at 320, 500, and 1280 CSS px, including pinned palette drag, focus clearance, compact mobile header, completion release, and no horizontal overflow; human visual confirmation pending.
+- **Red-variable result (2026-11-07):** Automated 12/12 pass confirming red `x` in palette, workspace, source/locked equations, orientation, and completion answer; `×` remains dark; text content unchanged; self-checks 70/70. Human visual confirmation pending.
+- **Reviewer decision:** Passed — M2 accepted. The floating-toolbox and red-variable enhancements are documented and awaiting a human visual check.

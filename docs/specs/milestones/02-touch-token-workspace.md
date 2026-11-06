@@ -1,6 +1,6 @@
 # Milestone 2 Spec: Touch-Friendly Token Workspace
 
-**Status:** Complete — implementation and human browser acceptance passed. Detailed browser/version and viewport evidence was not captured in this session. Depends on accepted M0 and M1.
+**Status:** Complete — implementation and human browser acceptance passed. A floating-toolbox enhancement was added on 2026-11-07 with automated verification; its human visual check remains pending. Detailed browser/version and viewport evidence was not captured in this session. Depends on accepted M0 and M1.
 
 ## Objective
 Turn the static active equation into a robust, child-friendly token editor usable with mouse, touch, and keyboard/tap-only interaction. The editor produces ordered LHS/RHS token arrays for the validation milestone without permitting changes to locked history.
@@ -44,9 +44,16 @@ The toolbar offers Move left, Move right, Move to left side, Move to right side,
 
 The drop index uses rendered workspace-token rectangles in DOM reading order, excluding a dragged same-side token: before a token midpoint inserts before it and after all token midpoints appends. This applies across wrapped lines. A valid side drop inserts exactly once; trash removes an existing token. Pointer cancel, lost capture, outside drop, reset, and session replacement discard transient drag state, release capture, remove the preview/marker, and leave existing arrays unchanged. A completed palette drag suppresses its follow-up pointer-generated click so it cannot insert a second token.
 
+### Floating toolbox while solving
+
+While `mode === 'started'`, the toolbox card uses CSS sticky positioning beneath the top of the viewport (respecting the safe-area inset) so the palette stays reachable as the learner scrolls a long equation path. It returns to its normal in-flow position when scrolling back up and stops sticking at the end of the session. In `completed` mode it becomes static and the disabled palette does not float over the completion panel. Below 600px the card uses compact padding, hides the eyebrow and helper line, and retains the “Token toolbox” heading.
+
+The card's measured height is published as `--toolbox-sticky-height`; scroll padding and scroll margins reserve that height so focused tokens, side selectors, live feedback, and completion content are not hidden beneath the pinned card. Focus applied after a programmatic edit uses `focus({ preventScroll: true })` followed by `scrollIntoView({ block: 'nearest' })`. The sticky card participates in normal pointer hit-testing only inside its own bounds and adds no dependency, observer, or animation loop when `ResizeObserver` is unavailable (a window-resize listener is the fallback).
+
 ## Accessibility and mobile behavior
 - All interactive palette, token, toolbar, and trash controls use semantic buttons or keyboard-operable controls and have at least 44×44px hit areas.
 - Text labels and ARIA labels name symbols in words: `×` is “multiply,” `÷` is “divide,” and so on.
+- The variable `x` renders in red wherever an equation is displayed—palette, active tokens, the submitted equation, locked rows, the orientation hint, and the completion answer. The multiplication sign `×` stays dark, so the two similar glyphs differ by hue as well as shape. Glyph, labels, and announcements still carry the meaning without color.
 - Screen readers receive a concise live announcement for insert, move, and delete operations, including side and position when useful.
 - The token arrangement uses wrapping rather than shrinking below legibility or causing document-level horizontal scrolling.
 - Pointer capture is released on `pointerup`, `pointercancel`, and component/session reset. Events must not leave the page with stuck dragging state.
@@ -66,6 +73,7 @@ The drop index uses rendered workspace-token rectangles in DOM reading order, ex
 - [x] A locked Step 1 cannot be edited through pointer, click, keyboard, or programmatic row event handlers exposed by UI controls.
 - [x] A keyboard-only user can perform insert, delete, reorder, and cross-side movement without a pointer gesture.
 - [x] At 320px, large token sequences wrap inside their side and the page does not horizontally scroll.
+- [x] While a session is active, the toolbox stays reachable beneath the top edge during vertical scrolling without covering focused tokens or feedback; it returns to normal flow at the top and becomes static when complete. Compact styling is used below 600px without horizontal overflow.
 - [x] The resulting ordered token arrays serialize to the intended expression text, including adjacency needed for `2x` and `2(x+1)`.
 
 ## Human demo script
@@ -76,12 +84,13 @@ The drop index uses rendered workspace-token rectangles in DOM reading order, ex
 5. Drag a token to trash. Confirm it is removed. Start a drag of an existing token and release it outside a target; confirm the token returns/retains its original position.
 6. Use browser device emulation or a touch device to repeat palette-to-side, reorder, cross-side move, and trash deletion. Confirm scrolling still works when not dragging.
 7. Without using a mouse, tab through side/select/edit controls and use the documented keyboard controls to insert `x`, move it between sides, reorder it, and delete it.
-8. Narrow the viewport to 320px, create a long token line, and confirm readable wrapping/no horizontal overflow. Reset and verify active editor state clears safely.
+8. Narrow the viewport to 320px, create a long token line, and confirm readable wrapping/no horizontal overflow. Scroll down and confirm the toolbox pins beneath the top edge without covering the active editor; scroll back up and confirm it returns to normal flow. Focus a newly inserted token and confirm it scrolls clear of the pinned card. Reset and verify active editor state clears safely.
 
 ## Verification evidence
 - Human demo passes using mouse and touch emulation or a physical touch device.
 - Keyboard-only pass documents the actual keys/controls used.
 - Console remains clear after canceled pointer interactions and reset.
+- Floating-toolbox enhancement (2026-11-07): automated CDP checks passed 35/35 at 320, 500, and 1280 CSS px, covering sticky pin/release, compact vs. full header, no horizontal overflow, focused-token visibility below the card, a real sticky-palette drag, and static completion mode with a zero sticky-height reserve. Human visual confirmation remains pending.
 
 ## Exit gate and dependencies
 **Entry:** M0 and M1 are accepted; this spec is approved.

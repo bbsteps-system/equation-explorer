@@ -100,7 +100,7 @@ The product is delivered in five sequential, independently reviewable milestones
 The visual language uses a warm off-white page background, bright indigo/teal/coral accents, large rounded cards and buttons, dark text on light surfaces, icon-and-text controls, and minimum 44×44px touch targets. No color is the sole conveyer of state; icons, text, and ARIA announcements accompany success and error states.
 
 ### Mobile draft
-On narrow screens, the header remains compact; equation input and Start button stack; the toolbox wraps into large tap-friendly rows; each active equation row stacks LHS, `=`, RHS, then the Check button. History stays chronological and horizontally safe—tokens wrap inside their side rather than forcing page overflow.
+On narrow screens, the header remains compact; equation input and Start button stack; the toolbox wraps into large tap-friendly rows and pins beneath the top of the viewport while solving; each active equation row stacks LHS, `=`, RHS, then the Check button. History stays chronological and horizontally safe—tokens wrap inside their side rather than forcing page overflow.
 
 ### Interaction flow
 1. **Landing/setup:** Show a friendly title, example placeholder, a short equivalence tip, and an input with Start Solving disabled until non-empty.
@@ -119,8 +119,10 @@ On narrow screens, the header remains compact; equation input and Start button s
 ### Token workspace
 - Palette provides `0`–`9`, decimal point (`.`), `+`, `−`, `×`, `÷`, `(`, `)`, and `x`.
 - A token is a semantic button/list item with its token type and a readable aria-label (for example, “multiply” rather than only `×`).
+- The variable `x` is red in the palette, active tokens, and rendered equations; multiplication `×` remains dark so the similar glyphs are easier to distinguish. Shape and accessible labels remain the primary distinction.
 - Active LHS and RHS are independently labeled droppable token lists separated by a static equality sign. They begin as tokenized copies of the latest accepted row.
 - A visible trash zone accepts dragging; keyboard/tap deletion is an equivalent path. Deleted items disappear only from the active row.
+- While a session is active, the toolbox pins beneath the top of the viewport during vertical scrolling so the palette stays reachable; it returns to normal flow at the top and becomes static once the session is complete. On screens narrower than 600px it compacts its padding and helper text. The app reserves the card's measured height in scroll offsets so focused tokens, side selectors, and feedback are not obscured.
 - Prior rows are immutable and cannot be edited, reordered, or deleted.
 
 ### Parsing and validation
@@ -184,7 +186,7 @@ The dependency-free release uses documented human acceptance passes. Parser/rati
 6. Submit equivalent steps for `2x - 3 = 8`, including `2x = 11`, then `x = 11 ÷ 2`; verify both lock and final celebration fires once.
 7. Repeat with `2x = 11`, `x = 5.5`, and `x = 11/2`; verify exact comparison rather than floating-point mismatch. Verify supported mixed-fraction setup behavior separately.
 8. Start direct reciprocal sources `2/x = 12` and `12 = 2/x`; verify each begins normally without revealing the exact answer. Try invalid source equations: `x² = 4`, `x = x`, `x = x + 1`, `2x =`, `x/0 = 1`, `2/(x + 1) = 3`, `1/x + 1/(x - 1) = 2`, and inputs with unknown symbols; verify understandable rejection without page failure.
-9. At 320px and desktop width, verify no horizontal scrolling and usable controls. Tab through all controls and trigger non-drag alternatives; inspect focus visibility and live feedback.
+9. At 320px and desktop width, verify no horizontal scrolling and usable controls. Scroll the solving path and confirm the toolbox stays reachable without covering the active tokens, then confirm it releases to normal flow on completion. Tab through all controls and trigger non-drag alternatives; inspect focus visibility and live feedback.
 10. Enable reduced motion and verify success/error/celebration remain understandable without disruptive movement. Test with audio unavailable or blocked; verify visual success still completes.
 
 ### Future automated coverage (ask first)
