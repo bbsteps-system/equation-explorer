@@ -1,0 +1,2032 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A friendly, step-by-step equation-solving game for children.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%234338ca'/%3E%3Ctext x='32' y='43' text-anchor='middle' font-family='sans-serif' font-size='34' font-weight='700' fill='white'%3E%3D%3C/text%3E%3C/svg%3E">
+  <title>Equation Explorer — Solve it step by step</title>
+  <style>
+    :root {
+      --page: #fff9ef;
+      --surface: #ffffff;
+      --surface-soft: #f5fbff;
+      --primary: #4338ca;
+      --primary-dark: #312e81;
+      --teal: #0f766e;
+      --coral: #c2410c;
+      --success: #15803d;
+      --error: #b91c1c;
+      --text: #1e293b;
+      --muted: #526176;
+      --border: #cbd5e1;
+      --focus: #f59e0b;
+      --shadow: 0 12px 30px rgb(30 41 59 / 12%);
+      --radius-lg: 1.5rem;
+      --radius-md: .9rem;
+      --radius-sm: .65rem;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { background: var(--page); }
+
+    body {
+      min-width: 320px;
+      margin: 0;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 4% 0%, #dff7f3 0, transparent 25rem),
+        radial-gradient(circle at 100% 16%, #fff0c5 0, transparent 24rem),
+        var(--page);
+      font-family: ui-rounded, "Nunito", "Avenir Next", Avenir, "Segoe UI", sans-serif;
+      font-size: 1rem;
+      line-height: 1.5;
+    }
+
+    button, input { font: inherit; }
+
+    button {
+      min-height: 44px;
+      border: 0;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+    }
+
+    button:focus-visible, input:focus-visible, [tabindex="-1"]:focus-visible {
+      outline: 4px solid var(--focus);
+      outline-offset: 3px;
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 1;
+    }
+
+    .site-header {
+      padding: 1.25rem 1rem .5rem;
+    }
+
+    .brand, .app-shell {
+      width: min(100%, 70rem);
+      margin: 0 auto;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+    }
+
+    .brand-mark {
+      display: grid;
+      width: 3rem;
+      height: 3rem;
+      place-items: center;
+      border-radius: 50%;
+      background: var(--primary);
+      color: white;
+      font-size: 1.6rem;
+      box-shadow: 0 5px 0 var(--primary-dark);
+    }
+
+    .brand h1 { margin: 0; font-size: clamp(1.6rem, 5vw, 2.35rem); line-height: 1.1; }
+    .brand p { margin: .15rem 0 0; color: var(--muted); font-weight: 600; }
+
+    .app-shell { padding: .75rem 1rem 2rem; }
+
+    .card {
+      border: 2px solid var(--border);
+      border-radius: var(--radius-lg);
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+
+    .setup-card { padding: clamp(1.25rem, 5vw, 2rem); }
+    .eyebrow { margin: 0 0 .25rem; color: var(--teal); font-size: .875rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+    h2 { margin: 0; font-size: clamp(1.4rem, 4vw, 1.85rem); line-height: 1.2; }
+
+    .setup-intro { margin: .5rem 0 1.25rem; color: var(--muted); }
+    .equation-form { display: grid; gap: .65rem; }
+    label { font-weight: 800; }
+
+    .equation-input {
+      width: 100%;
+      min-height: 3.1rem;
+      padding: .7rem .85rem;
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      background: white;
+    }
+
+    .equation-input[aria-invalid="true"] { border-color: var(--error); }
+    .field-help { margin: 0; color: var(--muted); font-size: .925rem; }
+
+    .primary-button {
+      padding: .65rem 1rem;
+      background: var(--primary);
+      color: white;
+      font-weight: 800;
+      box-shadow: 0 4px 0 var(--primary-dark);
+    }
+
+    .primary-button:not(:disabled):hover { background: var(--primary-dark); }
+    .primary-button:disabled { background: #94a3b8; box-shadow: none; color: #f8fafc; }
+
+    .tip {
+      display: flex;
+      gap: .6rem;
+      align-items: flex-start;
+      margin: 1.25rem 0 0;
+      padding: .9rem 1rem;
+      border-radius: var(--radius-md);
+      background: #ecfeff;
+      color: #134e4a;
+      font-weight: 650;
+    }
+
+    .tip-icon { flex: 0 0 auto; font-size: 1.25rem; }
+
+    .feedback {
+      min-height: 1.5rem;
+      margin: .85rem 0 0;
+      padding: 0 .15rem;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .feedback[data-kind="error"] { color: var(--error); }
+    .feedback[data-kind="error"]::before { content: "⚠ "; }
+    .feedback[data-kind="info"] { color: var(--teal); }
+
+    .session {
+      display: grid;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .session-actions { display: flex; justify-content: flex-end; }
+
+    .reset-button {
+      padding: .55rem .9rem;
+      border: 2px solid var(--primary);
+      background: white;
+      color: var(--primary-dark);
+      font-weight: 800;
+    }
+
+    .reset-button:hover { background: #eef2ff; }
+
+    .workspace-card { padding: 1.25rem; }
+    .workspace-card h2 { font-size: 1.35rem; }
+    .orientation { margin: .4rem 0 1rem; color: var(--muted); font-weight: 650; }
+
+    .toolbox-heading {
+      display: flex;
+      gap: .75rem;
+      align-items: baseline;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+
+    .coming-soon { margin: 0; color: var(--muted); font-weight: 650; }
+
+    .palette { display: flex; flex-wrap: wrap; gap: .45rem; margin-top: 1rem; }
+
+    .token {
+      min-width: 44px;
+      padding: .45rem .6rem;
+      border: 2px solid #b6d9e7;
+      background: #eefbff;
+      color: #365066;
+      font-weight: 850;
+      touch-action: manipulation;
+    }
+
+    .token:not(:disabled):hover { border-color: var(--teal); background: #dff7f3; }
+    .token-side, .trash-zone { touch-action: pan-y; }
+    .token-side {
+      display: flex;
+      position: relative;
+      flex-wrap: wrap;
+      align-content: flex-start;
+      gap: .35rem;
+      min-height: 4.25rem;
+      padding: .5rem;
+      border: 2px dashed #94a3b8;
+      border-radius: var(--radius-sm);
+      background: white;
+      cursor: pointer;
+    }
+    .token-side[data-selected="true"] { border-color: var(--primary); box-shadow: inset 0 0 0 2px #c7d2fe; }
+    .token-side[data-drop-target="true"] { border-color: var(--teal); background: #ecfeff; }
+    .empty-side { align-self: center; color: var(--muted); font-size: .9rem; font-weight: 700; pointer-events: none; }
+    .workspace-token { min-width: 44px; border-color: #99d7ce; background: #f0fdfa; user-select: none; }
+    .workspace-token[data-selected="true"] { border-color: var(--primary-dark); background: #e0e7ff; box-shadow: 0 0 0 2px #c7d2fe; }
+    .workspace-token[data-dragging="true"] { opacity: .35; }
+    .insertion-marker { width: 4px; min-height: 2.5rem; margin: 0 -.18rem; border-radius: 4px; background: var(--coral); pointer-events: none; }
+    .drag-preview { position: fixed; z-index: 10; padding: .35rem .6rem; border: 2px solid var(--primary-dark); border-radius: var(--radius-sm); background: #eef2ff; color: var(--primary-dark); font-weight: 850; pointer-events: none; transform: translate(12px, 12px); }
+
+    .trash-zone {
+      display: flex;
+      flex: 1 1 15rem;
+      align-items: center;
+      gap: .55rem;
+      min-height: 3.1rem;
+      padding: .55rem .8rem;
+      border: 2px dashed #cbd5e1;
+      border-radius: var(--radius-md);
+      background: #f8fafc;
+      color: #526176;
+      font-weight: 700;
+    }
+    .trash-zone[data-drop-target="true"] { border-color: var(--error); background: #fff1f2; color: var(--error); }
+
+    .step-list { display: grid; gap: .85rem; margin: 1rem 0 0; }
+    .locked-steps { display: grid; gap: .85rem; }
+    .locked-steps[hidden] { display: none; }
+    .step-row {
+      display: grid;
+      gap: .6rem;
+      padding: 1rem;
+      border: 2px solid #dbe5ef;
+      border-radius: var(--radius-md);
+      background: var(--surface-soft);
+    }
+
+    .step-label { font-weight: 850; }
+    .step-label span { color: var(--muted); font-size: .9rem; }
+    .equation-display { overflow-wrap: anywhere; font-size: 1.2rem; font-weight: 800; }
+    .equals { display: block; text-align: center; font-size: 1.4rem; font-weight: 900; }
+
+    .active-editor { display: grid; gap: .7rem; }
+    .equation-actions { display: flex; flex-wrap: wrap; gap: .7rem; align-items: center; }
+    .equation-actions .check-button { margin-left: auto; }
+    .check-button { min-width: 9rem; }
+    .side-selector, .token-toolbar { display: flex; flex-wrap: wrap; gap: .45rem; align-items: center; }
+    .side-selector legend { padding: 0; font-weight: 850; }
+    .side-choice { min-width: 44px; padding: .45rem .7rem; border: 2px solid var(--border); background: white; color: var(--text); font-weight: 800; }
+    .side-choice[aria-pressed="true"] { border-color: var(--primary); background: #e0e7ff; color: var(--primary-dark); }
+    .selected-side-status { margin: 0; color: var(--teal); font-weight: 800; }
+    .token-toolbar button { padding: .45rem .65rem; border: 2px solid var(--primary); background: white; color: var(--primary-dark); font-weight: 800; }
+    .token-toolbar button:disabled { border-color: var(--border); color: var(--muted); }
+    .active-equation { display: grid; gap: .45rem; align-items: center; }
+    .active-equation .equals { margin: -.15rem 0; }
+    .editor-help { margin: 0; color: var(--muted); font-size: .9rem; }
+
+    .token-side[data-error="true"] { border-color: var(--error); background: #fff1f2; }
+    .step-row[data-error="true"] { border-color: var(--error); background: #fff7f7; }
+    .step-row--active[data-shake="true"] { animation: row-shake .35s ease-in-out; }
+    .step-row--locked[data-just-locked="true"] { animation: locked-pop .35s ease-out; }
+
+    .feedback:focus, .token-side:focus, .completion-panel:focus {
+      outline: 4px solid var(--focus);
+      outline-offset: 3px;
+    }
+
+    .completion-panel {
+      margin: 1rem 0 0;
+      padding: 1.35rem;
+      border: 2px solid var(--success);
+      border-radius: var(--radius-md);
+      background: #f0fdf4;
+      color: #14532d;
+      text-align: center;
+    }
+
+    .completion-panel[hidden] { display: none; }
+    .completion-mark { margin: 0 0 .35rem; font-size: 1.8rem; line-height: 1; }
+    .completion-panel h2 { color: #14532d; }
+    .completion-praise { max-width: 38rem; margin: .45rem auto .7rem; font-weight: 700; }
+    .completion-answer {
+      margin: 0 auto 1rem;
+      font-size: clamp(1.15rem, 4vw, 1.5rem);
+      font-weight: 900;
+      overflow-wrap: anywhere;
+    }
+    .completion-panel .primary-button { min-width: 11rem; }
+
+    #confetti-layer {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .confetti-piece {
+      position: absolute;
+      top: -1rem;
+      left: var(--confetti-x);
+      width: var(--confetti-width);
+      height: var(--confetti-height);
+      border-radius: .15rem;
+      background: var(--confetti-color);
+      animation: confetti-fall var(--confetti-duration) var(--confetti-delay) ease-in both;
+    }
+
+    .token:disabled { border-color: var(--border); background: #f1f5f9; color: var(--muted); }
+
+    @keyframes row-shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-.35rem); }
+      75% { transform: translateX(.35rem); }
+    }
+
+    @keyframes locked-pop {
+      0% { transform: scale(.98); }
+      60% { transform: scale(1.01); }
+      100% { transform: scale(1); }
+    }
+
+    @keyframes confetti-fall {
+      0% { transform: translate3d(0, 0, 0) rotate(0deg); }
+      100% { transform: translate3d(var(--confetti-drift), 105vh, 0) rotate(var(--confetti-rotate)); }
+    }
+
+    [hidden] { display: none !important; }
+
+    @media (min-width: 600px) {
+      .site-header { padding-top: 1.75rem; }
+      .equation-form { grid-template-columns: minmax(0, 1fr) auto; align-items: end; }
+      .equation-form label, .field-help { grid-column: 1 / -1; }
+      .primary-button { min-width: 9.75rem; }
+      .workspace-card { padding: 1.5rem; }
+      .step-row--locked { grid-template-columns: 7rem minmax(0, 1fr) 2rem minmax(0, 1fr); align-items: center; }
+      .step-row--locked .equals { grid-column: 3; grid-row: 1; }
+      .step-row--locked .equation-display { grid-column: 2 / 5; grid-row: 1; padding-right: 1.75rem; }
+    }
+
+    @media (min-width: 900px) {
+      .app-shell { padding-top: 1.25rem; }
+      .session { gap: 1.25rem; }
+      .session-actions { margin-bottom: -.25rem; }
+      .palette { margin-top: .9rem; }
+      .solving-card { padding: 2rem; }
+      .solving-card h2 { font-size: 1.6rem; }
+      .step-list, .locked-steps { gap: 1.1rem; }
+      .step-row { padding: 1.4rem; }
+      .equation-display { font-size: 1.5rem; }
+      .active-equation { grid-template-columns: minmax(0, 1fr) 1.5rem minmax(0, 1fr); gap: .85rem; }
+      .active-equation .equals { grid-column: 2; font-size: 1.75rem; }
+      .active-equation .token-side { min-height: 5.5rem; }
+      .active-equation .token-side:first-of-type { grid-column: 1; }
+      .active-equation .token-side:last-of-type { grid-column: 3; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">🧮</span>
+      <div>
+        <h1>Equation Explorer</h1>
+        <p>Solve it step by step</p>
+      </div>
+    </div>
+  </header>
+
+  <main class="app-shell">
+    <section class="card setup-card" aria-labelledby="setup-heading">
+      <p class="eyebrow">Ready to explore?</p>
+      <h2 id="setup-heading">Start an equation</h2>
+      <p class="setup-intro">Type an equation, then we will set up your solving path together.</p>
+      <form id="equation-form" class="equation-form">
+        <label for="equation-input">Enter an equation</label>
+        <input id="equation-input" class="equation-input" name="equation" type="text" required autocomplete="off" placeholder="e.g. 2x - 3 = 8" aria-describedby="equation-help feedback">
+        <p id="equation-help" class="field-help">You can use any example for now. Equation checking comes next.</p>
+        <button id="start-button" class="primary-button" type="submit" disabled>Start Solving</button>
+      </form>
+      <aside class="tip" aria-label="Learning tip">
+        <span class="tip-icon" aria-hidden="true">💡</span>
+        <span>Whatever you do to one side, do it to the other side!</span>
+      </aside>
+      <p id="feedback" class="feedback" data-kind="info" role="status" aria-live="polite" aria-atomic="true" tabindex="-1"></p>
+    </section>
+
+    <div id="session" class="session" hidden>
+      <div class="session-actions">
+        <button id="reset-button" class="reset-button" type="button">New equation / Reset</button>
+      </div>
+
+      <section class="card workspace-card toolbox-card" aria-labelledby="toolbox-heading">
+        <div class="toolbox-heading">
+          <div>
+            <p class="eyebrow">Your tools</p>
+            <h2 id="toolbox-heading">Token toolbox</h2>
+          </div>
+          <span class="coming-soon">Tap or drag a token to build your next step.</span>
+        </div>
+        <div id="palette" class="palette" aria-label="Equation tokens"></div>
+      </section>
+
+      <section class="card workspace-card solving-card" aria-labelledby="solving-heading">
+        <p class="eyebrow">Your solving path</p>
+        <h2 id="solving-heading" tabindex="-1">Your first equation is ready</h2>
+        <p id="orientation" class="orientation" tabindex="-1">Build an equation that still has the same answer for x, then check it.</p>
+        <div class="step-list" aria-label="Equation steps">
+          <article class="step-row step-row--locked" aria-label="Step 1, locked">
+            <div class="step-label">Step 1 <span>🔒 Locked</span></div>
+            <div id="submitted-equation" class="equation-display"></div>
+          </article>
+          <div id="locked-steps" class="locked-steps" aria-label="Locked steps" hidden></div>
+          <article id="active-step" class="step-row step-row--active" aria-label="Step 2, editable">
+            <div class="step-label"><strong id="active-step-number">Step 2</strong> <span>Build it</span></div>
+            <div class="active-editor">
+              <fieldset class="side-selector">
+                <legend>Choose where palette tokens go</legend>
+                <button id="select-left" class="side-choice" type="button" aria-pressed="true">Left side</button>
+                <button id="select-right" class="side-choice" type="button" aria-pressed="false">Right side</button>
+              </fieldset>
+              <p id="selected-side-status" class="selected-side-status">Adding tokens to the left side.</p>
+              <div id="active-equation" class="active-equation" aria-label="Editable equation">
+                <div id="left-token-side" class="token-side" data-side="left" aria-label="Left side tokens" tabindex="-1" aria-describedby="session-feedback"></div>
+                <span class="equals" aria-label="equals">=</span>
+                <div id="right-token-side" class="token-side" data-side="right" aria-label="Right side tokens" tabindex="-1" aria-describedby="session-feedback"></div>
+              </div>
+              <div class="equation-actions">
+                <div id="trash-zone" class="trash-zone" aria-label="Trash zone. Drop a token here to delete it.">
+                  <span aria-hidden="true">🗑️</span>
+                  <span>Trash — drop a token here to erase it.</span>
+                </div>
+                <button id="check-button" class="primary-button check-button" type="button" aria-label="Check this equation">Check</button>
+              </div>
+              <div class="token-toolbar" aria-label="Selected token controls">
+                <button id="move-left" type="button">Move left</button>
+                <button id="move-right" type="button">Move right</button>
+                <button id="move-to-left" type="button">Move to left side</button>
+                <button id="move-to-right" type="button">Move to right side</button>
+                <button id="delete-token" type="button">Delete selected token</button>
+              </div>
+              <p class="editor-help">Tap a token to select it. Use these controls to move or delete it, or drag it with a mouse or touch.</p>
+            </div>
+          </article>
+        </div>
+        <p id="session-feedback" class="feedback" data-kind="info" role="status" aria-live="polite" aria-atomic="true" tabindex="-1"></p>
+        <section
+          id="completion-panel"
+          class="completion-panel"
+          role="region"
+          aria-labelledby="completion-heading"
+          aria-describedby="completion-praise completion-answer"
+          tabindex="-1"
+          hidden
+        >
+          <p class="completion-mark" aria-hidden="true">🎉 ✓</p>
+          <h2 id="completion-heading">You solved it!</h2>
+          <p id="completion-praise" class="completion-praise">Amazing work — you kept the equation balanced all the way to the answer.</p>
+          <p id="completion-answer" class="completion-answer"></p>
+          <button id="solve-another-button" class="primary-button" type="button">Solve another!</button>
+        </section>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    'use strict';
+
+    const MAX_INPUT_LENGTH = 512;
+    const MAX_TOKEN_COUNT = 160;
+    const DUPLICATE_CHECK_WINDOW_MS = 500;
+    const CONFETTI_PIECE_COUNT = 42;
+    const CONFETTI_LIFETIME_MS = 3200;
+    const CONFETTI_COLORS = ['#4338ca', '#0f766e', '#f59e0b', '#c2410c', '#15803d', '#db2777'];
+    const CANDIDATE_EMPTY_SIDE_MESSAGE = 'Let’s put something on both sides of the equals sign.';
+    const INEQUIVALENT_MESSAGE = 'That changes the answer for x. Try doing the same operation to both sides!';
+    const SAME_AS_PREVIOUS_STEP_MESSAGE = 'That is exactly the same as the previous step. Change something before checking!';
+    const PALETTE_TOKENS = [
+      ['0', 'zero'], ['1', 'one'], ['2', 'two'], ['3', 'three'], ['4', 'four'],
+      ['5', 'five'], ['6', 'six'], ['7', 'seven'], ['8', 'eight'], ['9', 'nine'],
+      ['.', 'decimal point'], ['+', 'plus'], ['−', 'minus'], ['×', 'multiply'],
+      ['÷', 'divide'], ['(', 'open parenthesis'], [')', 'close parenthesis'], ['x', 'variable x'],
+    ];
+    const MATH_MESSAGES = {
+      'empty-side': 'Use one equals sign, with an expression on both sides.',
+      'equality-count': 'Use one equals sign, with an expression on both sides.',
+      'unexpected-token': 'This side needs a number, x, or parentheses after that operation.',
+      'missing-operand': 'This side needs a number, x, or parentheses after that operation.',
+      'unmatched-parenthesis': 'Let’s close each set of parentheses.',
+      'malformed-number': 'That number needs a little fixing. Try digits like 0.5 or 11/2.',
+      'unsupported-symbol': 'This game solves equations with one lowercase x and no powers.',
+      'unsupported-variable': 'This game solves equations with one lowercase x and no powers.',
+      'unsupported-power': 'This game solves equations with one lowercase x and no powers.',
+      'divide-by-zero': 'We can’t divide by zero.',
+      nonlinear: 'Try multiplying x by a number, not by another x.',
+      'unsupported-rational': 'This game can use x in a denominator only in a simple equation like 2 ÷ x = 12.',
+      'not-unique': 'This equation does not have one answer for x yet.',
+      'no-solution': 'This equation does not have one answer for x yet.',
+      'input-too-long': 'Let’s try a shorter equation.',
+    };
+
+    function mathError(code, start, end) {
+      return { ok: false, error: { code, message: MATH_MESSAGES[code], start, end } };
+    }
+
+    function mathSuccess(value) {
+      return { ok: true, value };
+    }
+
+    function greatestCommonDivisor(left, right) {
+      let a = left < 0n ? -left : left;
+      let b = right < 0n ? -right : right;
+      while (b !== 0n) {
+        const remainder = a % b;
+        a = b;
+        b = remainder;
+      }
+      return a;
+    }
+
+    /** A reduced exact fraction with a positive denominator. */
+    function normalizeRational(numerator, denominator) {
+      if (denominator === 0n) throw new RangeError('A rational denominator cannot be zero.');
+      if (numerator === 0n) return { numerator: 0n, denominator: 1n };
+      const sign = denominator < 0n ? -1n : 1n;
+      const divisor = greatestCommonDivisor(numerator, denominator);
+      return {
+        numerator: (numerator / divisor) * sign,
+        denominator: (denominator / divisor) * sign,
+      };
+    }
+
+    function addRationals(left, right) {
+      return normalizeRational(
+        left.numerator * right.denominator + right.numerator * left.denominator,
+        left.denominator * right.denominator,
+      );
+    }
+
+    function subtractRationals(left, right) {
+      return addRationals(left, negateRational(right));
+    }
+
+    function multiplyRationals(left, right) {
+      return normalizeRational(left.numerator * right.numerator, left.denominator * right.denominator);
+    }
+
+    function divideRationals(left, right) {
+      return normalizeRational(left.numerator * right.denominator, left.denominator * right.numerator);
+    }
+
+    function negateRational(value) {
+      return { numerator: -value.numerator, denominator: value.denominator };
+    }
+
+    function isZeroRational(value) {
+      return value.numerator === 0n;
+    }
+
+    function sameRational(left, right) {
+      return left.numerator === right.numerator && left.denominator === right.denominator;
+    }
+
+    const ZERO = normalizeRational(0n, 1n);
+    const ONE = normalizeRational(1n, 1n);
+
+    function token(type, value, start, end) {
+      return { type, value, start, end };
+    }
+
+    function numberFromText(text, start, end) {
+      if (/^\d+$/.test(text)) return mathSuccess(normalizeRational(BigInt(text), 1n));
+      const decimalMatch = /^(\d+)\.(\d+)$/.exec(text);
+      if (decimalMatch) {
+        return mathSuccess(normalizeRational(
+          BigInt(decimalMatch[1] + decimalMatch[2]),
+          10n ** BigInt(decimalMatch[2].length),
+        ));
+      }
+      return mathError('malformed-number', start, end);
+    }
+
+    function tokenizeEquation(input) {
+      if (input.length > MAX_INPUT_LENGTH) return mathError('input-too-long', 0, input.length);
+      const tokens = [];
+      let index = 0;
+      const addToken = (nextToken) => {
+        tokens.push(nextToken);
+        return tokens.length <= MAX_TOKEN_COUNT;
+      };
+
+      while (index < input.length) {
+        const character = input[index];
+        if (/\s/.test(character)) {
+          index += 1;
+          continue;
+        }
+        if (character === '²') return mathError('unsupported-power', index, index + 1);
+        if (character >= '0' && character <= '9') {
+          const start = index;
+          while (index < input.length && /[0-9]/.test(input[index])) index += 1;
+          if (input[index] === '.') {
+            index += 1;
+            const fractionStart = index;
+            while (index < input.length && /[0-9]/.test(input[index])) index += 1;
+            if (fractionStart === index || input[index] === '.') return mathError('malformed-number', start, index + (input[index] === '.' ? 1 : 0));
+          }
+          const wholeText = input.slice(start, index);
+          const whitespaceStart = index;
+          while (index < input.length && /\s/.test(input[index])) index += 1;
+          const numeratorStart = index;
+          while (index < input.length && /[0-9]/.test(input[index])) index += 1;
+          const numeratorText = input.slice(numeratorStart, index);
+          if (whitespaceStart < numeratorStart && numeratorText && (input[index] === '/' || input[index] === '÷')) {
+            index += 1;
+            const denominatorStart = index;
+            while (index < input.length && /[0-9]/.test(input[index])) index += 1;
+            const denominatorText = input.slice(denominatorStart, index);
+            if (!/^\d+$/.test(wholeText) || !denominatorText) return mathError('malformed-number', start, index);
+            const numerator = BigInt(numeratorText);
+            const denominator = BigInt(denominatorText);
+            if (denominator === 0n || numerator >= denominator) return mathError('malformed-number', start, index);
+            const value = addRationals(normalizeRational(BigInt(wholeText), 1n), normalizeRational(numerator, denominator));
+            if (!addToken(token('number', { rational: value, text: input.slice(start, index) }, start, index))) {
+              return mathError('input-too-long', 0, input.length);
+            }
+            continue;
+          }
+          index = whitespaceStart;
+          const value = numberFromText(wholeText, start, whitespaceStart);
+          if (!value.ok) return value;
+          if (!addToken(token('number', { rational: value.value, text: wholeText }, start, whitespaceStart))) {
+            return mathError('input-too-long', 0, input.length);
+          }
+          continue;
+        }
+        if (character === '.') return mathError('malformed-number', index, index + 1);
+        if (character === 'x') {
+          if (!addToken(token('variable', 'x', index, index + 1))) return mathError('input-too-long', 0, input.length);
+          index += 1;
+          continue;
+        }
+        if (/[A-Za-z]/.test(character)) return mathError('unsupported-variable', index, index + 1);
+        const operators = { '+': 'plus', '-': 'minus', '−': 'minus', '*': 'multiply', '×': 'multiply', '/': 'divide', '÷': 'divide', '(': 'open', ')': 'close', '=': 'equals' };
+        if (operators[character]) {
+          if (!addToken(token(operators[character], character, index, index + 1))) return mathError('input-too-long', 0, input.length);
+          index += 1;
+          continue;
+        }
+        return mathError('unsupported-symbol', index, index + 1);
+      }
+      return mathSuccess(tokens);
+    }
+
+    function canImplicitlyMultiply(left, right) {
+      return (left.type === 'number' && (right.type === 'variable' || right.type === 'open'))
+        || (left.type === 'variable' && right.type === 'open')
+        || (left.type === 'close' && ['number', 'variable', 'open'].includes(right.type));
+    }
+
+    class EquationParser {
+      constructor(tokens) {
+        this.tokens = tokens;
+        this.position = 0;
+      }
+
+      current() { return this.tokens[this.position]; }
+      take() { const current = this.current(); this.position += 1; return current; }
+
+      parseEquation() {
+        const equalityCount = this.tokens.filter((item) => item.type === 'equals').length;
+        if (equalityCount !== 1) return mathError('equality-count');
+        const equalsIndex = this.tokens.findIndex((item) => item.type === 'equals');
+        if (equalsIndex === 0 || equalsIndex === this.tokens.length - 1) return mathError('empty-side');
+        const left = this.parseExpression();
+        if (!left.ok) return left;
+        if (!this.current() || this.current().type !== 'equals') return mathError('equality-count');
+        this.take();
+        const right = this.parseExpression();
+        if (!right.ok) return right;
+        if (this.current()) {
+          return mathError(this.current().type === 'close' ? 'unmatched-parenthesis' : 'unexpected-token', this.current().start, this.current().end);
+        }
+        return mathSuccess({ left: left.value, right: right.value });
+      }
+
+      parseExpression() {
+        let result = this.parseTerm();
+        if (!result.ok) return result;
+        while (this.current() && ['plus', 'minus'].includes(this.current().type)) {
+          const operator = this.take();
+          const right = this.parseTerm();
+          if (!right.ok) return right;
+          result = mathSuccess({ type: 'binary', operator: operator.type === 'plus' ? '+' : '-', left: result.value, right: right.value, start: result.value.start, end: right.value.end });
+        }
+        return result;
+      }
+
+      parseTerm() {
+        let result = this.parseUnary();
+        if (!result.ok) return result;
+        while (this.current()) {
+          const current = this.current();
+          let operator = null;
+          if (current.type === 'multiply' || current.type === 'divide') {
+            operator = current.type === 'multiply' ? '*' : '/';
+            this.take();
+          } else if (canImplicitlyMultiply(this.tokens[this.position - 1], current)) {
+            operator = '*';
+          } else if (['number', 'variable', 'open'].includes(current.type)) {
+            return mathError('unexpected-token', current.start, current.end);
+          } else {
+            break;
+          }
+          const right = this.parseUnary();
+          if (!right.ok) return right;
+          result = mathSuccess({ type: 'binary', operator, left: result.value, right: right.value, start: result.value.start, end: right.value.end });
+        }
+        return result;
+      }
+
+      parseUnary() {
+        const current = this.current();
+        if (current && ['plus', 'minus'].includes(current.type)) {
+          this.take();
+          const operand = this.parseUnary();
+          if (!operand.ok) return operand;
+          return mathSuccess({ type: 'unary', operator: current.type === 'plus' ? '+' : '-', operand: operand.value, start: current.start, end: operand.value.end });
+        }
+        return this.parsePrimary();
+      }
+
+      parsePrimary() {
+        const current = this.current();
+        if (!current) return mathError('missing-operand');
+        if (current.type === 'number') {
+          this.take();
+          const next = this.current();
+          if (next && next.type === 'number') return mathError('unexpected-token', next.start, next.end);
+          return mathSuccess({ type: 'number', value: current.value.rational, text: current.value.text, start: current.start, end: current.end });
+        }
+        if (current.type === 'variable') {
+          this.take();
+          return mathSuccess({ type: 'variable', start: current.start, end: current.end });
+        }
+        if (current.type === 'open') {
+          const opening = this.take();
+          const expression = this.parseExpression();
+          if (!expression.ok) return expression;
+          if (!this.current() || this.current().type !== 'close') return mathError('unmatched-parenthesis', opening.start, opening.end);
+          const closing = this.take();
+          return mathSuccess({ type: 'group', expression: expression.value, start: opening.start, end: closing.end });
+        }
+        if (current.type === 'close') return mathError('unmatched-parenthesis', current.start, current.end);
+        return mathError('missing-operand', current.start, current.end);
+      }
+    }
+
+    function parseEquationTokens(tokens) {
+      return new EquationParser(tokens).parseEquation();
+    }
+
+    /** Parse one side of an equation and require the whole token list to be consumed. */
+    function parseExpressionTokens(tokens) {
+      const parser = new EquationParser(tokens);
+      const result = parser.parseExpression();
+      if (!result.ok) return result;
+      const remaining = parser.current();
+      if (remaining) {
+        return mathError(remaining.type === 'close' ? 'unmatched-parenthesis' : 'unexpected-token', remaining.start, remaining.end);
+      }
+      return result;
+    }
+
+    function affine(x, constant) {
+      return { x, constant };
+    }
+
+    function reduceAffine(ast) {
+      if (ast.type === 'number') return mathSuccess(affine(ZERO, ast.value));
+      if (ast.type === 'variable') return mathSuccess(affine(ONE, ZERO));
+      if (ast.type === 'group') return reduceAffine(ast.expression);
+      if (ast.type === 'unary') {
+        const operand = reduceAffine(ast.operand);
+        if (!operand.ok || ast.operator === '+') return operand;
+        return mathSuccess(affine(negateRational(operand.value.x), negateRational(operand.value.constant)));
+      }
+      const left = reduceAffine(ast.left);
+      if (!left.ok) return left;
+      const right = reduceAffine(ast.right);
+      if (!right.ok) return right;
+      if (ast.operator === '+') return mathSuccess(affine(addRationals(left.value.x, right.value.x), addRationals(left.value.constant, right.value.constant)));
+      if (ast.operator === '-') return mathSuccess(affine(subtractRationals(left.value.x, right.value.x), subtractRationals(left.value.constant, right.value.constant)));
+      if (ast.operator === '*') {
+        if (!isZeroRational(left.value.x) && !isZeroRational(right.value.x)) return mathError('nonlinear', ast.start, ast.end);
+        if (isZeroRational(left.value.x)) {
+          return mathSuccess(affine(
+            multiplyRationals(left.value.constant, right.value.x),
+            multiplyRationals(left.value.constant, right.value.constant),
+          ));
+        }
+        return mathSuccess(affine(
+          multiplyRationals(left.value.x, right.value.constant),
+          multiplyRationals(left.value.constant, right.value.constant),
+        ));
+      }
+      if (!isZeroRational(right.value.x)) return mathError('unsupported-rational', ast.start, ast.end);
+      if (isZeroRational(right.value.constant)) return mathError('divide-by-zero', ast.start, ast.end);
+      return mathSuccess(affine(
+        divideRationals(left.value.x, right.value.constant),
+        divideRationals(left.value.constant, right.value.constant),
+      ));
+    }
+
+    function isDirectReciprocalTerm(ast) {
+      return ast.type === 'binary'
+        && ast.operator === '/'
+        && ast.right.type === 'variable';
+    }
+
+    function analyzeDirectReciprocalSource(equation) {
+      const reciprocalSides = [equation.left, equation.right].filter(isDirectReciprocalTerm);
+      if (reciprocalSides.length === 0) return { matched: false };
+      if (reciprocalSides.length !== 1) {
+        return { matched: true, result: mathError('unsupported-rational', equation.left.start, equation.right.end) };
+      }
+
+      const reciprocal = reciprocalSides[0];
+      const opposite = reciprocal === equation.left ? equation.right : equation.left;
+      const numerator = reduceAffine(reciprocal.left);
+      if (!numerator.ok) return { matched: true, result: numerator };
+      const denominator = reduceAffine(opposite);
+      if (!denominator.ok) return { matched: true, result: denominator };
+      if (!isZeroRational(numerator.value.x) || !isZeroRational(denominator.value.x)
+        || isZeroRational(numerator.value.constant) || isZeroRational(denominator.value.constant)) {
+        return { matched: true, result: mathError('unsupported-rational', reciprocal.start, opposite.end) };
+      }
+
+      return {
+        matched: true,
+        result: mathSuccess({
+          kind: 'direct-reciprocal',
+          left: null,
+          right: null,
+          solution: divideRationals(numerator.value.constant, denominator.value.constant),
+          domainRestriction: { variable: 'x', excluded: ZERO },
+          displayEquation: `${formatAst(equation.left)} = ${formatAst(equation.right)}`,
+        }),
+      };
+    }
+
+    function operatorDisplay(operator) {
+      return { '+': '+', '-': '−', '*': '×', '/': '÷' }[operator];
+    }
+
+    function precedence(ast) {
+      if (ast.type === 'binary') return ['+', '-'].includes(ast.operator) ? 1 : 2;
+      if (ast.type === 'unary') return 3;
+      return 4;
+    }
+
+    function formatAst(ast, parentPrecedence = 0, isRightOperand = false) {
+      if (ast.type === 'number') return ast.text;
+      if (ast.type === 'variable') return 'x';
+      if (ast.type === 'group') return `(${formatAst(ast.expression)})`;
+      if (ast.type === 'unary') {
+        const body = formatAst(ast.operand, 3);
+        const text = `${ast.operator === '-' ? '−' : '+'}${body}`;
+        return parentPrecedence > 3 ? `(${text})` : text;
+      }
+      const currentPrecedence = precedence(ast);
+      let left = formatAst(ast.left, currentPrecedence);
+      let right = formatAst(ast.right, currentPrecedence, true);
+      if (ast.operator === '-' && precedence(ast.right) === currentPrecedence) right = `(${right})`;
+      if (ast.operator === '/' && precedence(ast.right) <= currentPrecedence) right = `(${right})`;
+      let text = `${left} ${operatorDisplay(ast.operator)} ${right}`;
+      if (currentPrecedence < parentPrecedence || (isRightOperand && ast.operator === '/' && parentPrecedence === currentPrecedence)) text = `(${text})`;
+      return text;
+    }
+
+    function reduceAndSolveEquation(equation) {
+      const left = reduceAffine(equation.left);
+      if (!left.ok) return left;
+      const right = reduceAffine(equation.right);
+      if (!right.ok) return right;
+      const coefficient = subtractRationals(left.value.x, right.value.x);
+      const constant = subtractRationals(right.value.constant, left.value.constant);
+      if (isZeroRational(coefficient)) return mathError(isZeroRational(constant) ? 'not-unique' : 'no-solution');
+      return mathSuccess({
+        kind: 'linear',
+        left: left.value,
+        right: right.value,
+        solution: divideRationals(constant, coefficient),
+        domainRestriction: null,
+        displayEquation: `${formatAst(equation.left)} = ${formatAst(equation.right)}`,
+      });
+    }
+
+    function analyzeSourceEquation(input) {
+      if (typeof input !== 'string') return mathError('unsupported-symbol');
+      const rawInput = input.trim();
+      const tokenResult = tokenizeEquation(rawInput);
+      if (!tokenResult.ok) return tokenResult;
+      const parseResult = parseEquationTokens(tokenResult.value);
+      if (!parseResult.ok) return parseResult;
+      const reciprocalResult = analyzeDirectReciprocalSource(parseResult.value);
+      const result = reciprocalResult.matched ? reciprocalResult.result : reduceAndSolveEquation(parseResult.value);
+      if (!result.ok) return result;
+      return mathSuccess({ rawInput, ...result.value });
+    }
+
+    /** Parse and exactly reduce one active-row side without source-only reciprocal handling. */
+    function analyzeCandidateSide(tokens) {
+      if (tokens.length === 0) return mathError('empty-side');
+      const tokenResult = tokenizeEquation(serializeTokens(tokens));
+      if (!tokenResult.ok) return tokenResult;
+      const parseResult = parseExpressionTokens(tokenResult.value);
+      if (!parseResult.ok) return parseResult;
+      const reduceResult = reduceAffine(parseResult.value);
+      if (!reduceResult.ok) return reduceResult;
+      return mathSuccess({ ast: parseResult.value, affine: reduceResult.value });
+    }
+
+    function candidateError(side, error) {
+      return {
+        kind: 'error',
+        side,
+        error: error.code === 'empty-side' ? { ...error, message: CANDIDATE_EMPTY_SIDE_MESSAGE } : error,
+      };
+    }
+
+    /**
+     * Validate one active row as a candidate equation.
+     * Pure: accepts token arrays and source data, returns a verdict without touching the DOM.
+     *
+     * @returns
+     *   { kind: 'error', side: 'left'|'right'|null, error: MathError }
+     * | { kind: 'inequivalent' }
+     * | { kind: 'accepted', candidate: {
+     *     displayEquation: string, solution: Rational, isFinalForm: boolean
+     *   } }
+     */
+    function analyzeCandidateEquation(leftTokens, rightTokens, sourceEquation) {
+      const left = analyzeCandidateSide(leftTokens);
+      if (!left.ok) return candidateError('left', left.error);
+      const right = analyzeCandidateSide(rightTokens);
+      if (!right.ok) return candidateError('right', right.error);
+
+      const coefficient = subtractRationals(left.value.affine.x, right.value.affine.x);
+      const constant = subtractRationals(right.value.affine.constant, left.value.affine.constant);
+      if (isZeroRational(coefficient)) {
+        const code = isZeroRational(constant) ? 'not-unique' : 'no-solution';
+        return { kind: 'error', side: null, error: { code, message: MATH_MESSAGES[code] } };
+      }
+
+      const solution = divideRationals(constant, coefficient);
+      if (!sameRational(solution, sourceEquation.solution)) return { kind: 'inequivalent' };
+
+      return {
+        kind: 'accepted',
+        candidate: {
+          displayEquation: `${formatAst(left.value.ast)} = ${formatAst(right.value.ast)}`,
+          solution,
+          isFinalForm: isFinalFormCandidate(leftTokens, rightTokens, right.value.affine, sourceEquation.solution),
+        },
+      };
+    }
+
+    /**
+     * Canonical final form: LHS is exactly one `x` token, RHS is syntactically x-free,
+     * and its exact constant equals the source solution.
+     */
+    function isFinalFormCandidate(leftTokens, rightTokens, rightAffine, sourceSolution) {
+      return leftTokens.length === 1
+        && leftTokens[0].symbol === 'x'
+        && !rightTokens.some((item) => item.symbol === 'x')
+        && isZeroRational(rightAffine.x)
+        && sameRational(rightAffine.constant, sourceSolution);
+    }
+
+    function rationalMatches(value, numerator, denominator) {
+      return sameRational(value, normalizeRational(BigInt(numerator), BigInt(denominator)));
+    }
+
+    // Run runMathSelfChecks() in browser DevTools. It does not alter learner UI or app state.
+    function runMathSelfChecks() {
+      const cases = [];
+      const check = (name, passed) => cases.push({ name, passed: Boolean(passed) });
+      const solutionCase = (input, numerator, denominator) => {
+        const result = analyzeSourceEquation(input);
+        check(`solution: ${input}`, result.ok && rationalMatches(result.value.solution, numerator, denominator));
+      };
+      const reciprocalCase = (input, numerator, denominator, displayEquation) => {
+        const result = analyzeSourceEquation(input);
+        check(`direct reciprocal: ${input}`, result.ok
+          && result.value.kind === 'direct-reciprocal'
+          && result.value.left === null
+          && result.value.right === null
+          && rationalMatches(result.value.solution, numerator, denominator)
+          && result.value.domainRestriction.variable === 'x'
+          && rationalMatches(result.value.domainRestriction.excluded, 0, 1)
+          && result.value.displayEquation === displayEquation);
+      };
+      const rejectionCase = (input, code) => {
+        const result = analyzeSourceEquation(input);
+        check(`reject: ${input}`, !result.ok && result.error.code === code);
+      };
+      const candidateTokens = (text) => {
+        const result = tokenizeEquation(text);
+        if (!result.ok) return [];
+        const symbolByType = {
+          plus: '+', minus: '−', multiply: '×', divide: '÷',
+          open: '(', close: ')', variable: 'x',
+        };
+        return result.value.map((item, index) => ({
+          id: `self-check-${index}`,
+          symbol: item.type === 'number' ? item.value.text : symbolByType[item.type],
+          label: '',
+        }));
+      };
+      check('rational normalization', rationalMatches(normalizeRational(-6n, -8n), 3, 4));
+      check('rational zero canonicalization', rationalMatches(normalizeRational(0n, -7n), 0, 1));
+      check('exact decimal 0.5', rationalMatches(numberFromText('0.5', 0, 3).value, 1, 2));
+      solutionCase('2 + 3 * x = 14', 4, 1);
+      solutionCase('2(x + 1) = 6', 2, 1);
+      solutionCase('--x = 3', 3, 1);
+      solutionCase('2x - 3 = 8', 11, 2);
+      solutionCase('3(x + 2) = 15', 3, 1);
+      solutionCase('x/2 + 1 = 3', 4, 1);
+      solutionCase('0.5x = 1.25', 5, 2);
+      solutionCase('2x = 11/2', 11, 4);
+      solutionCase('x = 5 1/2', 11, 2);
+      solutionCase('2 x = 4', 2, 1);
+      solutionCase('(x - x) * 3 = x', 0, 1);
+      reciprocalCase('2/x = 12', 1, 6, '2 ÷ x = 12');
+      reciprocalCase('12 = 2/x', 1, 6, '12 = 2 ÷ x');
+      reciprocalCase('0.5/x = 1.25', 2, 5, '0.5 ÷ x = 1.25');
+      const maxLengthResult = analyzeSourceEquation(`x=${'0'.repeat(MAX_INPUT_LENGTH - 2)}`);
+      check('maximum input length remains analyzable', maxLengthResult.ok && rationalMatches(maxLengthResult.value.solution, 0, 1));
+      const tokenLimitResult = analyzeSourceEquation(`${Array(82).fill('x').join('+')}=1`);
+      check('token limit rejects oversized expressions', !tokenLimitResult.ok && tokenLimitResult.error.code === 'input-too-long');
+      const multiplicationFormat = analyzeSourceEquation('2*(x+1)=4');
+      check('format: multiplication grouping', multiplicationFormat.ok && multiplicationFormat.value.displayEquation === '2 × (x + 1) = 4');
+      const divisionFormat = analyzeSourceEquation('x/(2/3)=3');
+      check('format: division grouping', divisionFormat.ok && divisionFormat.value.displayEquation === 'x ÷ (2 ÷ 3) = 3');
+      const unaryFormat = analyzeSourceEquation('-(x+1)=3');
+      check('format: unary grouping', unaryFormat.ok && unaryFormat.value.displayEquation === '−(x + 1) = 3');
+      rejectionCase('', 'equality-count');
+      rejectionCase('x =', 'empty-side');
+      rejectionCase('x == 2', 'equality-count');
+      rejectionCase('(x + 1 = 2', 'unmatched-parenthesis');
+      rejectionCase('.5x = 1', 'malformed-number');
+      rejectionCase('x = 5 3/2', 'malformed-number');
+      rejectionCase('2 3 = 6', 'unexpected-token');
+      rejectionCase('2y = 3', 'unsupported-variable');
+      rejectionCase('x² = 4', 'unsupported-power');
+      rejectionCase('x*x = 4', 'nonlinear');
+      rejectionCase('x/x = 1', 'unsupported-rational');
+      rejectionCase('x/0 = 1', 'divide-by-zero');
+      rejectionCase('2/x = 0', 'unsupported-rational');
+      rejectionCase('0/x = 2', 'unsupported-rational');
+      rejectionCase('2/(x + 1) = 3', 'unsupported-rational');
+      rejectionCase('1/x + 1/(x - 1) = 2', 'unsupported-rational');
+      rejectionCase('2/x = 3/x', 'unsupported-rational');
+      rejectionCase('x = x', 'not-unique');
+      rejectionCase('x = x + 1', 'no-solution');
+      rejectionCase('x'.repeat(MAX_INPUT_LENGTH + 1), 'input-too-long');
+      const tokenIdBeforeChecks = nextTokenId;
+      const uniqueIds = (tokens) => new Set(tokens.map((item) => item.id)).size === tokens.length;
+      const linearWorkspace = tokensFromDisplay('2x − 3 = 8');
+      check('workspace source conversion: linear', serializeTokens(linearWorkspace.leftTokens) === '2x−3'
+        && serializeTokens(linearWorkspace.rightTokens) === '8'
+        && uniqueIds([...linearWorkspace.leftTokens, ...linearWorkspace.rightTokens])
+        && linearWorkspace.leftTokens !== linearWorkspace.rightTokens);
+      const groupedWorkspace = tokensFromDisplay('2 × (x + 1) = 6');
+      check('workspace source conversion: grouping', serializeTokens(groupedWorkspace.leftTokens) === '2×(x+1)'
+        && serializeTokens(groupedWorkspace.rightTokens) === '6');
+      const reciprocalWorkspace = tokensFromDisplay('2 ÷ x = 12');
+      check('workspace source conversion: reciprocal', serializeTokens(reciprocalWorkspace.leftTokens) === '2÷x'
+        && serializeTokens(reciprocalWorkspace.rightTokens) === '12');
+      nextTokenId = tokenIdBeforeChecks;
+
+      const fixture = (id, symbol) => ({ id, symbol, label: tokenLabel(symbol) });
+      const originalRow = {
+        id: 'test-row',
+        leftTokens: [fixture('a', '2'), fixture('b', 'x'), fixture('c', '+')],
+        rightTokens: [fixture('d', '8')],
+      };
+      const insertedRow = insertTokenInRow(originalRow, 'left', 1, fixture('e', '1'));
+      check('workspace insert uses requested position', serializeTokens(insertedRow.leftTokens) === '21x+'
+        && serializeTokens(originalRow.leftTokens) === '2x+');
+      const reorderedRow = moveTokenInRow(originalRow, 'left', 'b', 'left', 0);
+      check('workspace same-side reorder', serializeTokens(reorderedRow.leftTokens) === 'x2+');
+      const transferredRow = moveTokenInRow(originalRow, 'left', 'b', 'right', 1);
+      check('workspace cross-side move', serializeTokens(transferredRow.leftTokens) === '2+'
+        && serializeTokens(transferredRow.rightTokens) === '8x');
+      const deletedRow = removeTokenFromRow(originalRow, 'left', 'b');
+      check('workspace deletion', Boolean(deletedRow) && serializeTokens(deletedRow.row.leftTokens) === '2+');
+      check('workspace missing-token no-op', moveTokenInRow(originalRow, 'left', 'missing', 'right', 0) === originalRow);
+      check('workspace cancellation leaves arrays intact', serializeTokens(originalRow.leftTokens) === '2x+'
+        && serializeTokens(originalRow.rightTokens) === '8');
+
+      const candidateSource = analyzeSourceEquation('2x - 3 = 8');
+      const sourceEquation = candidateSource.ok ? candidateSource.value : null;
+      const candidateVerdict = (leftText, rightText) => sourceEquation
+        ? analyzeCandidateEquation(candidateTokens(leftText), candidateTokens(rightText), sourceEquation)
+        : { kind: 'error', side: null, error: { code: 'no-source', message: '' } };
+      const acceptedCase = (leftText, rightText, isFinalForm, displayEquation) => {
+        const verdict = candidateVerdict(leftText, rightText);
+        check(`candidate accepted: ${leftText} = ${rightText}`, sourceEquation
+          && verdict.kind === 'accepted'
+          && verdict.candidate.isFinalForm === isFinalForm
+          && verdict.candidate.displayEquation === displayEquation);
+      };
+      const candidateErrorCase = (leftText, rightText, code, side) => {
+        const verdict = candidateVerdict(leftText, rightText);
+        check(`candidate error: ${leftText} = ${rightText}`, verdict.kind === 'error'
+          && verdict.error.code === code
+          && verdict.side === side);
+      };
+
+      acceptedCase('2x', '11', false, '2 × x = 11');
+      acceptedCase('x', '11 ÷ 2', true, 'x = 11 ÷ 2');
+      acceptedCase('x', '5.5', true, 'x = 5.5');
+      acceptedCase('1 × x', '11 ÷ 2', false, '1 × x = 11 ÷ 2');
+      acceptedCase('(x)', '11 ÷ 2', false, '(x) = 11 ÷ 2');
+      acceptedCase('x', '11 ÷ 2 + x − x', false, 'x = 11 ÷ 2 + x − x');
+      check('candidate solution stays exact', sourceEquation
+        && candidateVerdict('2x', '11').candidate.solution.numerator === 11n
+        && candidateVerdict('2x', '11').candidate.solution.denominator === 2n);
+      const inequivalentVerdict = candidateVerdict('2x', '12');
+      check('candidate inequivalence', inequivalentVerdict.kind === 'inequivalent');
+      candidateErrorCase('2x −', '8', 'missing-operand', 'left');
+      candidateErrorCase('2x', '', 'empty-side', 'right');
+      candidateErrorCase('2x', '2x', 'not-unique', null);
+      candidateErrorCase('x', 'x + 1', 'no-solution', null);
+      candidateErrorCase('x × x', '4', 'nonlinear', 'left');
+      candidateErrorCase('x ÷ 0', '1', 'divide-by-zero', 'left');
+      candidateErrorCase('2 ÷ x', '12', 'unsupported-rational', 'left');
+      const tooManyTokens = Array.from({ length: MAX_TOKEN_COUNT + 1 }, (_, index) => ({
+        id: `limit-${index}`, symbol: 'x', label: '',
+      }));
+      const limitVerdict = analyzeCandidateEquation(tooManyTokens, candidateTokens('4'), sourceEquation);
+      check('candidate token limit', limitVerdict.kind === 'error'
+        && limitVerdict.error.code === 'input-too-long'
+        && limitVerdict.side === 'left');
+      const emptySource = analyzeSourceEquation('x = 0');
+      const zeroVerdict = emptySource.ok
+        ? analyzeCandidateEquation(candidateTokens('x'), candidateTokens('0'), emptySource.value)
+        : { kind: 'error' };
+      check('candidate zero solution final form', zeroVerdict.kind === 'accepted' && zeroVerdict.candidate.isFinalForm);
+      const reciprocalSource = analyzeSourceEquation('2/x = 12');
+      const reciprocalVerdict = reciprocalSource.ok
+        ? analyzeCandidateEquation(candidateTokens('x'), candidateTokens('1 ÷ 6'), reciprocalSource.value)
+        : { kind: 'error' };
+      check('reciprocal source completes to linear final form', reciprocalVerdict.kind === 'accepted'
+        && reciprocalVerdict.candidate.isFinalForm
+        && reciprocalVerdict.candidate.solution.numerator === 1n
+        && reciprocalVerdict.candidate.solution.denominator === 6n);
+      const slashSource = analyzeSourceEquation('x = 11/2');
+      const slashVerdict = slashSource.ok
+        ? analyzeCandidateEquation(candidateTokens('x'), candidateTokens('11 ÷ 2'), slashSource.value)
+        : { kind: 'error' };
+      check('slash source normalizes to division final form', slashVerdict.kind === 'accepted'
+        && slashVerdict.candidate.isFinalForm
+        && slashSource.value.displayEquation === 'x = 11 ÷ 2');
+
+      const report = { passed: cases.filter((item) => item.passed).length, failed: cases.filter((item) => !item.passed).length, cases };
+      console.table(cases);
+      return report;
+    }
+
+    window.runMathSelfChecks = runMathSelfChecks;
+
+    let nextTokenId = 1;
+    let nextRowId = 1;
+
+    function nextActiveRowId() {
+      return `row-${nextRowId++}`;
+    }
+
+    function tokenLabel(symbol) {
+      const match = PALETTE_TOKENS.find(([value]) => value === symbol);
+      return match ? match[1] : symbol;
+    }
+
+    function createWorkspaceToken(symbol) {
+      return { id: `token-${nextTokenId++}`, symbol, label: tokenLabel(symbol) };
+    }
+
+    function copyTokensForNewRow(tokens) {
+      return tokens.map((item) => createWorkspaceToken(item.symbol));
+    }
+
+    function createActiveRow(leftTokens, rightTokens) {
+      return {
+        id: nextActiveRowId(),
+        leftTokens: copyTokensForNewRow(leftTokens),
+        rightTokens: copyTokensForNewRow(rightTokens),
+      };
+    }
+
+    function tokensFromDisplay(displayEquation) {
+      const tokenResult = tokenizeEquation(displayEquation);
+      if (!tokenResult.ok) return { leftTokens: [], rightTokens: [] };
+      const equalsIndex = tokenResult.value.findIndex((item) => item.type === 'equals');
+      const toWorkspaceTokens = (items) => items.map((item) => {
+        const symbols = { plus: '+', minus: '−', multiply: '×', divide: '÷', open: '(', close: ')', variable: 'x' };
+        return createWorkspaceToken(item.type === 'number' ? item.value.text : symbols[item.type]);
+      });
+      return {
+        leftTokens: toWorkspaceTokens(tokenResult.value.slice(0, equalsIndex)),
+        rightTokens: toWorkspaceTokens(tokenResult.value.slice(equalsIndex + 1)),
+      };
+    }
+
+    function serializeTokens(tokens) {
+      return tokens.map((item) => item.symbol).join('');
+    }
+
+    function removeTokenFromRow(row, side, tokenId) {
+      const key = side === 'left' ? 'leftTokens' : 'rightTokens';
+      const index = row[key].findIndex((item) => item.id === tokenId);
+      if (index < 0) return null;
+      const tokens = row[key].slice();
+      const [removed] = tokens.splice(index, 1);
+      return { row: { ...row, [key]: tokens }, token: removed, index };
+    }
+
+    function insertTokenInRow(row, side, index, item) {
+      const key = side === 'left' ? 'leftTokens' : 'rightTokens';
+      const tokens = row[key].slice();
+      tokens.splice(Math.max(0, Math.min(index, tokens.length)), 0, item);
+      return { ...row, [key]: tokens };
+    }
+
+    function moveTokenInRow(row, fromSide, tokenId, toSide, toIndex) {
+      const removed = removeTokenFromRow(row, fromSide, tokenId);
+      if (!removed) return row;
+      return insertTokenInRow(removed.row, toSide, toIndex, removed.token);
+    }
+
+    const state = {
+      mode: 'landing',
+      draftEquation: '',
+      submittedEquation: '',
+      sourceEquation: null,
+      lockedRows: [],
+      activeRow: null,
+      selectedSide: 'left',
+      selectedToken: null,
+      drag: null,
+      feedback: { kind: 'info', message: '', side: null, scope: 'setup' },
+      lastAcceptedCheck: null,
+      sourceStepSignature: null,
+      animateLockedRowId: null,
+      celebrationPlayed: false,
+    };
+
+    const form = document.querySelector('#equation-form');
+    const equationInput = document.querySelector('#equation-input');
+    const startButton = document.querySelector('#start-button');
+    const feedbackElement = document.querySelector('#feedback');
+    const sessionElement = document.querySelector('#session');
+    const submittedEquationElement = document.querySelector('#submitted-equation');
+    const orientationElement = document.querySelector('#orientation');
+    const lockedStepsElement = document.querySelector('#locked-steps');
+    const activeStepElement = document.querySelector('#active-step');
+    const activeStepNumberElement = document.querySelector('#active-step-number');
+    const completionPanelElement = document.querySelector('#completion-panel');
+    const completionAnswerElement = document.querySelector('#completion-answer');
+    const solveAnotherButton = document.querySelector('#solve-another-button');
+    const sessionFeedbackElement = document.querySelector('#session-feedback');
+    const checkButton = document.querySelector('#check-button');
+    const resetButton = document.querySelector('#reset-button');
+    const paletteElement = document.querySelector('#palette');
+    const activeEquationElement = document.querySelector('#active-equation');
+    const leftTokenSide = document.querySelector('#left-token-side');
+    const rightTokenSide = document.querySelector('#right-token-side');
+    const trashZone = document.querySelector('#trash-zone');
+    const selectLeftButton = document.querySelector('#select-left');
+    const selectRightButton = document.querySelector('#select-right');
+    const selectedSideStatus = document.querySelector('#selected-side-status');
+    const moveLeftButton = document.querySelector('#move-left');
+    const moveRightButton = document.querySelector('#move-right');
+    const moveToLeftButton = document.querySelector('#move-to-left');
+    const moveToRightButton = document.querySelector('#move-to-right');
+    const deleteTokenButton = document.querySelector('#delete-token');
+    let pendingFocus = null;
+    let ignorePaletteClickUntil = 0;
+    let celebrationTimer = null;
+    let audioContext = null;
+
+    function isDraftEquationPresent() {
+      return state.draftEquation.trim().length > 0;
+    }
+
+    function setFeedback(kind, message, side = null, scope = state.mode === 'landing' ? 'setup' : 'session') {
+      state.feedback = { kind, message, side, scope };
+    }
+
+    function announce(message) {
+      setFeedback('info', message);
+    }
+
+    function canEditActiveRow() {
+      return state.mode === 'started' && Boolean(state.activeRow);
+    }
+
+    function selectedTokenDetails() {
+      if (!state.activeRow || !state.selectedToken) return null;
+      const side = state.selectedToken.side;
+      const tokens = side === 'left' ? state.activeRow.leftTokens : state.activeRow.rightTokens;
+      const index = tokens.findIndex((item) => item.id === state.selectedToken.tokenId);
+      return index < 0 ? null : { side, tokens, index, token: tokens[index] };
+    }
+
+    function normalizeSelection() {
+      if (!selectedTokenDetails()) state.selectedToken = null;
+    }
+
+    function renderPalette() {
+      const fragment = document.createDocumentFragment();
+      PALETTE_TOKENS.forEach(([symbol, label]) => {
+        const paletteToken = document.createElement('button');
+        paletteToken.className = 'token palette-token';
+        paletteToken.type = 'button';
+        paletteToken.dataset.symbol = symbol;
+        paletteToken.textContent = symbol;
+        paletteToken.setAttribute('aria-label', `Insert ${label}`);
+        fragment.append(paletteToken);
+      });
+      paletteElement.replaceChildren(fragment);
+    }
+
+    function renderTokenSide(element, side) {
+      const tokens = state.activeRow ? (side === 'left' ? state.activeRow.leftTokens : state.activeRow.rightTokens) : [];
+      element.dataset.selected = String(state.selectedSide === side);
+      element.replaceChildren();
+      if (tokens.length === 0) {
+        const empty = document.createElement('span');
+        empty.className = 'empty-side';
+        empty.textContent = 'Drop or add tokens here';
+        element.append(empty);
+      }
+      tokens.forEach((item) => {
+        const button = document.createElement('button');
+        button.className = 'token workspace-token';
+        button.type = 'button';
+        button.dataset.tokenId = item.id;
+        button.dataset.side = side;
+        button.dataset.selected = String(Boolean(state.selectedToken && state.selectedToken.side === side && state.selectedToken.tokenId === item.id));
+        button.dataset.dragging = String(Boolean(state.drag && state.drag.active && state.drag.kind === 'existing' && state.drag.tokenId === item.id));
+        button.textContent = item.symbol;
+        button.setAttribute('aria-label', `${item.label}, ${side} side token`);
+        element.append(button);
+      });
+      if (state.drag && state.drag.active && state.drag.target && state.drag.target.kind === 'side' && state.drag.target.side === side) {
+        const marker = document.createElement('span');
+        marker.className = 'insertion-marker';
+        marker.setAttribute('aria-hidden', 'true');
+        const buttons = [...element.querySelectorAll('.workspace-token')].filter((button) => button.dataset.tokenId !== state.drag.tokenId);
+        const before = buttons[state.drag.target.index];
+        element.insertBefore(marker, before || null);
+      }
+    }
+
+    function renderToolbar() {
+      const details = selectedTokenDetails();
+      const hasDetails = Boolean(details);
+      moveLeftButton.disabled = !hasDetails || details.index === 0;
+      moveRightButton.disabled = !hasDetails || details.index === details.tokens.length - 1;
+      moveToLeftButton.disabled = !hasDetails || details.side === 'left';
+      moveToRightButton.disabled = !hasDetails || details.side === 'right';
+      deleteTokenButton.disabled = !hasDetails;
+    }
+
+    function renderLockedRows() {
+      lockedStepsElement.replaceChildren();
+      lockedStepsElement.hidden = state.lockedRows.length === 0;
+      if (state.lockedRows.length === 0) {
+        state.animateLockedRowId = null;
+        return;
+      }
+      const fragment = document.createDocumentFragment();
+      state.lockedRows.forEach((row, index) => {
+        const article = document.createElement('article');
+        article.className = 'step-row step-row--locked';
+        article.setAttribute('aria-label', `Step ${index + 2}, ${row.isFinal ? 'solved' : 'locked'}`);
+        const label = document.createElement('div');
+        label.className = 'step-label';
+        label.textContent = `Step ${index + 2} `;
+        const checkIcon = document.createElement('span');
+        checkIcon.setAttribute('aria-hidden', 'true');
+        checkIcon.textContent = '✓ ';
+        const status = document.createElement('span');
+        status.textContent = row.isFinal ? 'Solved' : 'Locked';
+        label.append(checkIcon, status);
+        const display = document.createElement('div');
+        display.className = 'equation-display';
+        display.textContent = row.displayEquation;
+        article.append(label, display);
+        if (state.animateLockedRowId === row.id) article.dataset.justLocked = 'true';
+        fragment.append(article);
+      });
+      lockedStepsElement.append(fragment);
+      state.animateLockedRowId = null;
+    }
+
+    function finalLockedRow() {
+      for (let index = state.lockedRows.length - 1; index >= 0; index -= 1) {
+        if (state.lockedRows[index].isFinal) return state.lockedRows[index];
+      }
+      return null;
+    }
+
+    function clearConfettiLayer() {
+      const layer = document.querySelector('#confetti-layer');
+      if (layer) layer.remove();
+    }
+
+    function launchConfetti() {
+      try {
+        if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        clearConfettiLayer();
+        const layer = document.createElement('div');
+        layer.id = 'confetti-layer';
+        layer.setAttribute('aria-hidden', 'true');
+        const fragment = document.createDocumentFragment();
+        for (let index = 0; index < CONFETTI_PIECE_COUNT; index += 1) {
+          const piece = document.createElement('span');
+          piece.className = 'confetti-piece';
+          const widthRem = 0.45 + ((index * 13) % 4) / 20;
+          const heightRem = 0.7 + ((index * 19) % 5) / 20;
+          const drift = ((index * 37) % 61) - 30;
+          const rotation = 180 + ((index * 53) % 360);
+          const delay = ((index * 17) % 7) / 10;
+          const duration = 2.1 + ((index * 23) % 5) / 10;
+          piece.style.setProperty('--confetti-x', `${(index * 73 + 7) % 100}%`);
+          piece.style.setProperty('--confetti-width', `${widthRem.toFixed(2)}rem`);
+          piece.style.setProperty('--confetti-height', `${heightRem.toFixed(2)}rem`);
+          piece.style.setProperty('--confetti-drift', `${drift}px`);
+          piece.style.setProperty('--confetti-rotate', `${rotation}deg`);
+          piece.style.setProperty('--confetti-delay', `${delay.toFixed(1)}s`);
+          piece.style.setProperty('--confetti-duration', `${duration.toFixed(1)}s`);
+          piece.style.setProperty('--confetti-color', CONFETTI_COLORS[index % CONFETTI_COLORS.length]);
+          if (index % 3 === 0) piece.style.borderRadius = '50%';
+          fragment.append(piece);
+        }
+        layer.append(fragment);
+        document.body.append(layer);
+        celebrationTimer = window.setTimeout(() => {
+          celebrationTimer = null;
+          clearConfettiLayer();
+        }, CONFETTI_LIFETIME_MS);
+      } catch (error) {
+        clearConfettiLayer();
+      }
+    }
+
+    function playCelebrationChime() {
+      try {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContextClass) return;
+        if (!audioContext || audioContext.state === 'closed') {
+          audioContext = new AudioContextClass();
+        }
+        const scheduleNotes = () => {
+          try {
+            const context = audioContext;
+            if (!context || context.state === 'closed') return;
+            const startTime = context.currentTime + 0.03;
+            [523.25, 659.25, 783.99].forEach((frequency, index) => {
+              const noteStart = startTime + index * 0.11;
+              const oscillator = context.createOscillator();
+              const gain = context.createGain();
+              oscillator.type = 'sine';
+              oscillator.frequency.setValueAtTime(frequency, noteStart);
+              gain.gain.setValueAtTime(0.0001, noteStart);
+              gain.gain.exponentialRampToValueAtTime(0.06, noteStart + 0.015);
+              gain.gain.exponentialRampToValueAtTime(0.0001, noteStart + 0.2);
+              oscillator.connect(gain);
+              gain.connect(context.destination);
+              oscillator.start(noteStart);
+              oscillator.stop(noteStart + 0.21);
+              oscillator.addEventListener('ended', () => {
+                oscillator.disconnect();
+                gain.disconnect();
+              });
+            });
+          } catch (error) {
+            // Audio is optional; completion must never depend on it.
+          }
+        };
+        if (audioContext.state === 'suspended') {
+          const resumed = audioContext.resume();
+          if (resumed && typeof resumed.then === 'function') resumed.then(scheduleNotes).catch(() => {});
+          else scheduleNotes();
+        } else {
+          scheduleNotes();
+        }
+      } catch (error) {
+        // Blocked or unavailable audio is not an error for the learner.
+      }
+    }
+
+    function clearCelebration() {
+      if (celebrationTimer !== null) {
+        window.clearTimeout(celebrationTimer);
+        celebrationTimer = null;
+      }
+      clearConfettiLayer();
+      if (audioContext) {
+        try {
+          if (audioContext.state !== 'closed' && typeof audioContext.close === 'function') {
+            const closing = audioContext.close();
+            if (closing && typeof closing.catch === 'function') closing.catch(() => {});
+          }
+        } catch (error) {
+          // Cleanup stays best-effort.
+        }
+      }
+      audioContext = null;
+    }
+
+    function launchCelebration() {
+      if (state.mode !== 'completed' || state.celebrationPlayed) return;
+      state.celebrationPlayed = true;
+      launchConfetti();
+      playCelebrationChime();
+    }
+
+    function render() {
+      normalizeSelection();
+      const hasDraft = isDraftEquationPresent();
+      const isStarted = state.mode === 'started';
+      const isCompleted = state.mode === 'completed';
+      const isSessionVisible = state.mode !== 'landing';
+      const hasSourceError = state.feedback.kind === 'error' && state.feedback.scope === 'setup';
+      const hasSessionError = state.feedback.kind === 'error' && state.feedback.scope === 'session';
+
+      equationInput.value = state.draftEquation;
+      equationInput.setCustomValidity(hasDraft && !hasSourceError ? '' : 'Enter a supported equation before we begin.');
+      equationInput.setAttribute('aria-invalid', String(hasSourceError));
+      startButton.disabled = !hasDraft;
+
+      feedbackElement.dataset.kind = state.feedback.kind;
+      feedbackElement.textContent = state.feedback.scope === 'setup' ? state.feedback.message : '';
+      sessionFeedbackElement.dataset.kind = state.feedback.kind;
+      sessionFeedbackElement.textContent = state.feedback.scope === 'session' ? state.feedback.message : '';
+
+      sessionElement.hidden = !isSessionVisible;
+      submittedEquationElement.textContent = isSessionVisible ? state.submittedEquation : '';
+      renderLockedRows();
+      activeStepNumberElement.textContent = `Step ${state.lockedRows.length + 2}`;
+      activeStepElement.setAttribute('aria-label', `Step ${state.lockedRows.length + 2}, editable`);
+      activeStepElement.hidden = !isStarted;
+      activeStepElement.removeAttribute('data-shake');
+      const finalRow = isCompleted ? finalLockedRow() : null;
+      completionPanelElement.hidden = !isCompleted;
+      completionAnswerElement.textContent = finalRow ? `The answer is ${finalRow.displayEquation}.` : '';
+
+      selectLeftButton.setAttribute('aria-pressed', String(state.selectedSide === 'left'));
+      selectRightButton.setAttribute('aria-pressed', String(state.selectedSide === 'right'));
+      selectLeftButton.disabled = !isStarted;
+      selectRightButton.disabled = !isStarted;
+      selectedSideStatus.textContent = `Adding tokens to the ${state.selectedSide} side.`;
+      paletteElement.querySelectorAll('button').forEach((button) => { button.disabled = !isStarted; });
+      trashZone.hidden = !isStarted;
+
+      renderTokenSide(leftTokenSide, 'left');
+      renderTokenSide(rightTokenSide, 'right');
+      leftTokenSide.dataset.error = String(hasSessionError && state.feedback.side === 'left');
+      rightTokenSide.dataset.error = String(hasSessionError && state.feedback.side === 'right');
+      activeStepElement.dataset.error = String(hasSessionError && state.feedback.side === null);
+
+      const sideDropTarget = state.drag && state.drag.active && state.drag.target && state.drag.target.kind === 'side'
+        ? state.drag.target.side
+        : null;
+      leftTokenSide.dataset.dropTarget = String(sideDropTarget === 'left');
+      rightTokenSide.dataset.dropTarget = String(sideDropTarget === 'right');
+      renderToolbar();
+      checkButton.disabled = !isStarted || !state.activeRow;
+      trashZone.dataset.dropTarget = String(Boolean(state.drag && state.drag.active && state.drag.target && state.drag.target.kind === 'trash'));
+      if (pendingFocus) {
+        const focusTarget = document.querySelector(`[data-token-id="${pendingFocus}"]`);
+        if (focusTarget) focusTarget.focus();
+        pendingFocus = null;
+      }
+    }
+
+    function setSelectedSide(side, shouldAnnounce = true) {
+      if (!canEditActiveRow()) return;
+      state.selectedSide = side;
+      state.selectedToken = null;
+      if (shouldAnnounce) announce(`Selected the ${side} side. Palette tokens will be added there.`);
+      render();
+    }
+
+    function selectToken(side, tokenId) {
+      if (!canEditActiveRow()) return;
+      state.selectedSide = side;
+      state.selectedToken = { side, tokenId };
+      const details = selectedTokenDetails();
+      if (details) announce(`Selected ${details.token.label} in the ${side} side, position ${details.index + 1}.`);
+      pendingFocus = details ? tokenId : null;
+      render();
+    }
+
+    function appendPaletteToken(symbol) {
+      if (!canEditActiveRow()) return;
+      const key = state.selectedSide === 'left' ? 'leftTokens' : 'rightTokens';
+      if (state.activeRow[key].length >= MAX_TOKEN_COUNT) {
+        setFeedback('error', 'That side is full. Try removing a token first.');
+        render();
+        return;
+      }
+      const item = createWorkspaceToken(symbol);
+      state.activeRow = insertTokenInRow(state.activeRow, state.selectedSide, state.activeRow[key].length, item);
+      state.selectedToken = { side: state.selectedSide, tokenId: item.id };
+      pendingFocus = item.id;
+      announce(`Added ${item.label} to the ${state.selectedSide} side.`);
+      render();
+    }
+
+    function deleteSelectedToken() {
+      if (!canEditActiveRow()) return;
+      const details = selectedTokenDetails();
+      if (!details) return;
+      const removed = removeTokenFromRow(state.activeRow, details.side, details.token.id);
+      state.activeRow = removed.row;
+      const nextTokens = details.side === 'left' ? state.activeRow.leftTokens : state.activeRow.rightTokens;
+      const focusToken = nextTokens[removed.index] || nextTokens[removed.index - 1];
+      state.selectedToken = focusToken ? { side: details.side, tokenId: focusToken.id } : null;
+      pendingFocus = focusToken ? focusToken.id : null;
+      announce(`Deleted ${details.token.label} from the ${details.side} side.`);
+      render();
+      if (!focusToken) (details.side === 'left' ? selectLeftButton : selectRightButton).focus();
+    }
+
+    function reorderSelectedToken(offset) {
+      if (!canEditActiveRow()) return;
+      const details = selectedTokenDetails();
+      if (!details || details.index + offset < 0 || details.index + offset >= details.tokens.length) return;
+      const nextIndex = details.index + offset;
+      state.activeRow = moveTokenInRow(state.activeRow, details.side, details.token.id, details.side, nextIndex > details.index ? nextIndex + 1 : nextIndex);
+      state.selectedToken = { side: details.side, tokenId: details.token.id };
+      pendingFocus = details.token.id;
+      announce(`Moved ${details.token.label} to position ${nextIndex + 1} on the ${details.side} side.`);
+      render();
+    }
+
+    function moveSelectedTokenToSide(targetSide) {
+      if (!canEditActiveRow()) return;
+      const details = selectedTokenDetails();
+      if (!details || details.side === targetSide) return;
+      const targetTokens = targetSide === 'left' ? state.activeRow.leftTokens : state.activeRow.rightTokens;
+      state.activeRow = moveTokenInRow(state.activeRow, details.side, details.token.id, targetSide, targetTokens.length);
+      state.selectedSide = targetSide;
+      state.selectedToken = { side: targetSide, tokenId: details.token.id };
+      pendingFocus = details.token.id;
+      announce(`Moved ${details.token.label} to the ${targetSide} side.`);
+      render();
+    }
+
+    function cleanupDrag() {
+      if (state.drag && state.drag.captureElement && state.drag.captureElement.hasPointerCapture(state.drag.pointerId)) {
+        state.drag.captureElement.releasePointerCapture(state.drag.pointerId);
+      }
+      const preview = document.querySelector('#drag-preview');
+      if (preview) preview.remove();
+      state.drag = null;
+    }
+
+    function dragTargetAt(clientX, clientY) {
+      const target = document.elementFromPoint(clientX, clientY);
+      if (!target) return null;
+      if (target.closest('#trash-zone')) return { kind: 'trash' };
+      const sideElement = target.closest('.token-side');
+      if (!sideElement) return null;
+      const side = sideElement.dataset.side;
+      const buttons = [...sideElement.querySelectorAll('.workspace-token')].filter((button) => !state.drag || button.dataset.tokenId !== state.drag.tokenId);
+      let index = buttons.length;
+      for (let current = 0; current < buttons.length; current += 1) {
+        const rect = buttons[current].getBoundingClientRect();
+        const halfway = rect.top + rect.height / 2;
+        if (clientY < halfway || (clientY <= rect.bottom && clientX < rect.left + rect.width / 2)) {
+          index = current;
+          break;
+        }
+      }
+      return { kind: 'side', side, index };
+    }
+
+    function updateDrag(event) {
+      const drag = state.drag;
+      if (!drag || drag.pointerId !== event.pointerId) return;
+      const distance = Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY);
+      if (!drag.active && distance >= (event.pointerType === 'touch' ? 10 : 6)) {
+        drag.active = true;
+        drag.captureElement.setPointerCapture(event.pointerId);
+        const preview = document.createElement('div');
+        preview.id = 'drag-preview';
+        preview.className = 'drag-preview';
+        preview.textContent = drag.label;
+        document.body.append(preview);
+      }
+      if (!drag.active) return;
+      event.preventDefault();
+      const preview = document.querySelector('#drag-preview');
+      if (preview) {
+        preview.style.left = `${event.clientX}px`;
+        preview.style.top = `${event.clientY}px`;
+      }
+      drag.target = dragTargetAt(event.clientX, event.clientY);
+      render();
+    }
+
+    function finishDrag(event, canceled = false) {
+      const drag = state.drag;
+      if (!drag || drag.pointerId !== event.pointerId) return;
+      if (!canEditActiveRow()) {
+        cleanupDrag();
+        return;
+      }
+      if (!drag.active) {
+        cleanupDrag();
+        return;
+      }
+      if (drag.kind === 'palette') ignorePaletteClickUntil = Date.now() + 400;
+      const target = !canceled && drag.active ? dragTargetAt(event.clientX, event.clientY) : null;
+      if (target) {
+        if (target.kind === 'trash' && drag.kind === 'existing') {
+          const removed = removeTokenFromRow(state.activeRow, drag.side, drag.tokenId);
+          if (removed) {
+            state.activeRow = removed.row;
+            state.selectedToken = null;
+            announce(`Deleted ${drag.label} from the ${drag.side} side.`);
+          }
+        } else if (target.kind === 'side') {
+          let item;
+          let row = state.activeRow;
+          const key = target.side === 'left' ? 'leftTokens' : 'rightTokens';
+          if (drag.kind === 'palette' && row[key].length >= MAX_TOKEN_COUNT) {
+            setFeedback('error', 'That side is full. Try removing a token first.');
+          } else {
+            if (drag.kind === 'existing') {
+              const removed = removeTokenFromRow(row, drag.side, drag.tokenId);
+              if (!removed) { cleanupDrag(); render(); return; }
+              item = removed.token;
+              row = removed.row;
+            } else {
+              item = createWorkspaceToken(drag.symbol);
+            }
+            const insertionIndex = Math.min(target.index, row[key].length);
+            state.activeRow = insertTokenInRow(row, target.side, insertionIndex, item);
+            state.selectedSide = target.side;
+            state.selectedToken = { side: target.side, tokenId: item.id };
+            pendingFocus = item.id;
+            announce(`${drag.kind === 'palette' ? 'Added' : 'Moved'} ${item.label} to position ${insertionIndex + 1} on the ${target.side} side.`);
+          }
+        }
+      }
+      cleanupDrag();
+      render();
+    }
+
+    function beginDrag(event) {
+      const tokenElement = event.target.closest('.palette-token, .workspace-token');
+      if (!tokenElement || !canEditActiveRow() || event.button > 0) return;
+      const isPalette = tokenElement.classList.contains('palette-token');
+      state.drag = {
+        pointerId: event.pointerId,
+        sourceElement: tokenElement,
+        captureElement: activeEquationElement,
+        startX: event.clientX,
+        startY: event.clientY,
+        active: false,
+        kind: isPalette ? 'palette' : 'existing',
+        symbol: isPalette ? tokenElement.dataset.symbol : null,
+        tokenId: isPalette ? null : tokenElement.dataset.tokenId,
+        side: isPalette ? null : tokenElement.dataset.side,
+        label: isPalette ? tokenLabel(tokenElement.dataset.symbol) : tokenElement.getAttribute('aria-label').replace(/, .*/, ''),
+        target: null,
+      };
+    }
+
+    function rowSignature(row) {
+      return `${serializeTokens(row.leftTokens)}|${serializeTokens(row.rightTokens)}`;
+    }
+
+    function isDuplicateActivation(signature) {
+      return Boolean(state.lastAcceptedCheck
+        && state.lastAcceptedCheck.signature === signature
+        && Date.now() - state.lastAcceptedCheck.at < DUPLICATE_CHECK_WINDOW_MS);
+    }
+
+    function previousStepSignature() {
+      if (state.lockedRows.length > 0) {
+        return rowSignature(state.lockedRows[state.lockedRows.length - 1]);
+      }
+      return state.sourceStepSignature;
+    }
+
+    function isSameAsPreviousStep(signature) {
+      const previousSignature = previousStepSignature();
+      return previousSignature !== null && previousSignature === signature;
+    }
+
+    function previousStepDisplayEquation() {
+      if (state.lockedRows.length > 0) {
+        return state.lockedRows[state.lockedRows.length - 1].displayEquation;
+      }
+      return state.submittedEquation || null;
+    }
+
+    function triggerActiveShake() {
+      if (activeStepElement.hidden) return;
+      activeStepElement.removeAttribute('data-shake');
+      void activeStepElement.offsetWidth;
+      activeStepElement.dataset.shake = 'true';
+    }
+
+    function rejectCandidate(message, side) {
+      setFeedback('error', message, side, 'session');
+      render();
+      triggerActiveShake();
+      const focusTarget = side === 'left' ? leftTokenSide : side === 'right' ? rightTokenSide : sessionFeedbackElement;
+      focusTarget.scrollIntoView({ block: 'nearest' });
+      focusTarget.focus();
+    }
+
+    function lockActiveRow(candidate, signature) {
+      const lockedRow = {
+        id: nextActiveRowId(),
+        leftTokens: copyTokensForNewRow(state.activeRow.leftTokens),
+        rightTokens: copyTokensForNewRow(state.activeRow.rightTokens),
+        displayEquation: candidate.displayEquation,
+        isFinal: candidate.isFinalForm,
+      };
+      state.lockedRows = [...state.lockedRows, lockedRow];
+      state.animateLockedRowId = lockedRow.id;
+      state.selectedToken = null;
+      pendingFocus = null;
+
+      if (candidate.isFinalForm) {
+        state.mode = 'completed';
+        state.activeRow = null;
+        state.lastAcceptedCheck = null;
+        setFeedback('info', '', null, 'session');
+        render();
+        completionPanelElement.scrollIntoView({ block: 'nearest' });
+        completionPanelElement.focus();
+        launchCelebration();
+        return;
+      }
+
+      state.activeRow = createActiveRow(state.activeRow.leftTokens, state.activeRow.rightTokens);
+      state.lastAcceptedCheck = { signature, at: Date.now() };
+      setFeedback('info', 'Great equivalent equation!', null, 'session');
+      render();
+      leftTokenSide.scrollIntoView({ block: 'nearest' });
+      leftTokenSide.focus();
+    }
+
+    function checkActiveEquation() {
+      if (state.mode !== 'started' || !state.activeRow || !state.sourceEquation) return;
+      cleanupDrag();
+      checkButton.disabled = true;
+      const rowId = state.activeRow.id;
+      const signature = rowSignature(state.activeRow);
+      if (isDuplicateActivation(signature)) {
+        render();
+        return;
+      }
+      if (isSameAsPreviousStep(signature)) {
+        rejectCandidate(SAME_AS_PREVIOUS_STEP_MESSAGE, null);
+        return;
+      }
+
+      const verdict = analyzeCandidateEquation(
+        state.activeRow.leftTokens.slice(),
+        state.activeRow.rightTokens.slice(),
+        state.sourceEquation,
+      );
+      if (state.mode !== 'started' || !state.activeRow || state.activeRow.id !== rowId) return;
+
+      if (verdict.kind === 'error') {
+        rejectCandidate(verdict.error.message, verdict.side);
+        return;
+      }
+      if (verdict.kind === 'inequivalent') {
+        rejectCandidate(INEQUIVALENT_MESSAGE, null);
+        return;
+      }
+      if (verdict.candidate.displayEquation === previousStepDisplayEquation()) {
+        rejectCandidate(SAME_AS_PREVIOUS_STEP_MESSAGE, null);
+        return;
+      }
+      lockActiveRow(verdict.candidate, signature);
+    }
+
+    function startSession() {
+      clearCelebration();
+      state.celebrationPlayed = false;
+      const analysis = analyzeSourceEquation(state.draftEquation);
+      cleanupDrag();
+      pendingFocus = null;
+      state.selectedSide = 'left';
+      state.selectedToken = null;
+      state.lockedRows = [];
+      state.lastAcceptedCheck = null;
+      state.sourceStepSignature = null;
+      state.animateLockedRowId = null;
+      if (!analysis.ok) {
+        state.mode = 'landing';
+        state.submittedEquation = '';
+        state.sourceEquation = null;
+        state.activeRow = null;
+        setFeedback('error', analysis.error.message, null, 'setup');
+        render();
+        equationInput.focus();
+        return;
+      }
+      const workspace = tokensFromDisplay(analysis.value.displayEquation);
+      state.mode = 'started';
+      state.submittedEquation = analysis.value.displayEquation;
+      state.sourceEquation = analysis.value;
+      state.sourceStepSignature = rowSignature(workspace);
+      state.activeRow = createActiveRow(workspace.leftTokens, workspace.rightTokens);
+      setFeedback('info', 'Your first equation is ready. Choose a side, then tap or drag tokens to edit Step 2.', null, 'session');
+      render();
+      orientationElement.focus();
+    }
+
+    function resetSession() {
+      clearCelebration();
+      state.celebrationPlayed = false;
+      cleanupDrag();
+      pendingFocus = null;
+      state.mode = 'landing';
+      state.draftEquation = '';
+      state.submittedEquation = '';
+      state.sourceEquation = null;
+      state.lockedRows = [];
+      state.activeRow = null;
+      state.selectedSide = 'left';
+      state.selectedToken = null;
+      state.lastAcceptedCheck = null;
+      state.sourceStepSignature = null;
+      state.animateLockedRowId = null;
+      setFeedback('info', 'Ready for a new equation.', null, 'setup');
+      render();
+      equationInput.focus();
+    }
+
+    equationInput.addEventListener('input', () => {
+      state.draftEquation = equationInput.value;
+      if (isDraftEquationPresent()) setFeedback('info', '');
+      render();
+    });
+
+    equationInput.addEventListener('blur', () => {
+      if (state.draftEquation.length > 0 && !isDraftEquationPresent()) {
+        setFeedback('error', 'Spaces are not an equation. Type something before we begin.');
+        render();
+      }
+    });
+
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      startSession();
+    });
+    resetButton.addEventListener('click', resetSession);
+    solveAnotherButton.addEventListener('click', resetSession);
+    checkButton.addEventListener('click', checkActiveEquation);
+    selectLeftButton.addEventListener('click', () => setSelectedSide('left'));
+    selectRightButton.addEventListener('click', () => setSelectedSide('right'));
+    paletteElement.addEventListener('click', (event) => {
+      const button = event.target.closest('.palette-token');
+      if (event.detail > 0 && Date.now() < ignorePaletteClickUntil) return;
+      if (button && (!state.drag || !state.drag.active)) appendPaletteToken(button.dataset.symbol);
+    });
+    document.querySelector('#active-equation').addEventListener('click', (event) => {
+      if (state.drag && state.drag.active) return;
+      const button = event.target.closest('.workspace-token');
+      if (button) {
+        selectToken(button.dataset.side, button.dataset.tokenId);
+        return;
+      }
+      const sideElement = event.target.closest('.token-side');
+      if (sideElement) setSelectedSide(sideElement.dataset.side);
+    });
+    moveLeftButton.addEventListener('click', () => reorderSelectedToken(-1));
+    moveRightButton.addEventListener('click', () => reorderSelectedToken(1));
+    moveToLeftButton.addEventListener('click', () => moveSelectedTokenToSide('left'));
+    moveToRightButton.addEventListener('click', () => moveSelectedTokenToSide('right'));
+    deleteTokenButton.addEventListener('click', deleteSelectedToken);
+    document.addEventListener('pointerdown', beginDrag);
+    document.addEventListener('pointermove', updateDrag, { passive: false });
+    document.addEventListener('pointerup', (event) => finishDrag(event));
+    document.addEventListener('pointercancel', (event) => finishDrag(event, true));
+    activeEquationElement.addEventListener('lostpointercapture', (event) => finishDrag(event, true));
+    renderPalette();
+    render();
+  </script>
+</body>
+</html>

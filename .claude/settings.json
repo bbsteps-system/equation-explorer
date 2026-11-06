@@ -1,0 +1,66 @@
+{
+  "k-env": {
+    "ANTHROPIC_BASE_URL": "http://localhost:8085/",
+    "ANTHROPIC_AUTH_TOKEN": "aws4boris",
+    "ANTHROPIC_MODEL": "gpt-5.6-terra",
+    "ANTHROPIC_DEFAULT_SONNET_MODEL": "gpt-5.6-terra",
+    "ANTHROPIC_SMALL_FAST_MODEL": "gpt-5.6-luna",
+    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "gpt-5.6-luna",
+    "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1"
+  },
+  "permissions": {
+    "ask": [
+      "WebSearch",
+      "WebFetch"
+    ]
+  },
+  "enabledPlugins": {},
+  "theme": "dark",
+  "ds-env": {
+    "ANTHROPIC_BASE_URL": "https://api.deepseek.com/anthropic",
+    "ANTHROPIC_AUTH_TOKEN": "sk-edce787fca774e80abb4672666842aa1",
+    "ANTHROPIC_MODEL": "deepseek-flash",
+    "ANTHROPIC_DEFAULT_SONNET_MODEL": "deepseek-flash",
+    "ANTHROPIC_SMALL_FAST_MODEL": "deepseek-flash",
+    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "deepseek-flash",
+    "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1"
+  },
+  "tp-ali-env": {
+    "ANTHROPIC_BASE_URL": "https://token-plan.ap-southeast-1.maas.aliyuncs.com/apps/anthropic",
+    "ANTHROPIC_AUTH_TOKEN": "sk-sp-H.IHLIP.6Sfd.MEQCIA2AoW0yjg-ZZMmBHNxutP6fNI-J8GJ1yw8INIUE_PlwAiAytsYhqQtWkpTDbR5FtO8MEDyaybNjUxVE8V9v97NBBg",
+    "ANTHROPIC_MODEL": "qwen3.8-max",
+    "ANTHROPIC_DEFAULT_SONNET_MODEL": "qwen3.8-max",
+    "ANTHROPIC_SMALL_FAST_MODEL": "qwen3.8-max",
+    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "qwen3.8-max",
+    "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1",
+    "CLAUDE_CODE_MAX_OUTPUT_TOKENS": "42000"
+  },
+  "env": {
+    "ANTHROPIC_BASE_URL": "https://token-plan.ap-southeast-1.maas.aliyuncs.com/apps/anthropic",
+    "ANTHROPIC_AUTH_TOKEN": "sk-sp-H.IHLIP.6Sfd.MEQCIA2AoW0yjg-ZZMmBHNxutP6fNI-J8GJ1yw8INIUE_PlwAiAytsYhqQtWkpTDbR5FtO8MEDyaybNjUxVE8V9v97NBBg",
+    "ANTHROPIC_MODEL": "deepseek-v4.1-flash",
+    "ANTHROPIC_DEFAULT_SONNET_MODEL": "deepseek-v4.1-flash",
+    "ANTHROPIC_SMALL_FAST_MODEL": "deepseek-v4.1-flash",
+    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "deepseek-v4.1-flash",
+    "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1",
+    "CLAUDE_CODE_MAX_OUTPUT_TOKENS": "42000"
+  },
+  "gw-env": {
+    "ANTHROPIC_BASE_URL": "http://localhost:8020/v1/messages",
+    "ANTHROPIC_AUTH_TOKEN": "aws4boris",
+    "ANTHROPIC_MODEL": "gpt-5.6-terra",
+    "ANTHROPIC_DEFAULT_SONNET_MODEL": "gpt-5.6-terra",
+    "ANTHROPIC_SMALL_FAST_MODEL": "gpt-5.6-luna",
+    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "gpt-5.6-luna",
+    "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1"
+  },
+  "fenv": {
+    "ANTHROPIC_BASE_URL": "https://www.fucheers.top",
+    "ANTHROPIC_AUTH_TOKEN": "sk-Brtl7zRgJ7t4hpCPon7RZP1CW5tUIfDeDuwPlknfefqSDTf2",
+    "ANTHROPIC_MODEL": "claude-opus-5",
+    "ANTHROPIC_DEFAULT_SONNET_MODEL": "claude-opus-5",
+    "ANTHROPIC_SMALL_FAST_MODEL": "claude-haiku-4-5-20251001",
+    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "claude-haiku-4-5-20251001",
+    "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1"
+  }
+}
