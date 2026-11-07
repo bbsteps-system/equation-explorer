@@ -11,8 +11,8 @@ Build a standalone, kid-friendly browser game that teaches solving single-variab
 - Represent linear expressions and values with exact rational arithmetic, not binary floating point.
 
 ## Scope
-- Support one-variable, unique-solution linear equations, plus the approved source-only direct-reciprocal exception `c / x = d` or `d = c / x` when `c` and `d` are nonzero constant expressions. Keep the exception narrow: do not accept general rational equations or other variable denominators.
-- Accepted notation: integers, terminating decimals, fractions using `÷` or `/`, parentheses, `+`, `-`, `×`/`*`, implicit multiplication such as `2x`, and `x`.
+- Support one-variable, unique-solution linear equations, plus the approved source-only direct-reciprocal exception `c / y = d` or `d = c / y` when `c` and `d` are nonzero constant expressions. Keep the exception narrow: do not accept general rational equations or other variable denominators.
+- Accepted notation: integers, terminating decimals, fractions using `÷` or `/`, parentheses, `+`, `-`, `×`/`*`, implicit multiplication such as `2y`, and `y`.
 - Treat unsupported, nonlinear, unsupported-rational, identity, and contradiction equations as invalid and explain the limitation clearly.
 
 ## Quality Requirements

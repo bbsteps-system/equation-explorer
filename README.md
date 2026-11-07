@@ -1,6 +1,6 @@
 # Equation Explorer
 
-A lightweight, kid-friendly browser app for practising single-variable linear equations step by step. Learners enter an equation, then—over later milestones—will use touch-friendly math tokens to build equivalent steps until `x` is isolated.
+A lightweight, kid-friendly browser app for practising single-variable linear equations step by step. Learners enter an equation, then—over later milestones—will use touch-friendly math tokens to build equivalent steps until `y` is isolated.
 
 ## Current status
 Milestone 0 (responsive UI shell) is implemented. Its final visual/accessibility acceptance review is pending. Milestone 1 (exact math engine) is specified but not implemented.
