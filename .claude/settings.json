@@ -16,7 +16,7 @@
   },
   "enabledPlugins": {},
   "theme": "dark",
-  "ds-env": {
+  "dsenv": {
     "ANTHROPIC_BASE_URL": "https://api.deepseek.com/anthropic",
     "ANTHROPIC_AUTH_TOKEN": "sk-edce787fca774e80abb4672666842aa1",
     "ANTHROPIC_MODEL": "deepseek-flash",

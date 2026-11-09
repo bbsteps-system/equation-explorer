@@ -72,7 +72,7 @@
     }
 
     .brand, .app-shell {
-      width: min(100%, 70rem);
+      width: 100%;
       margin: 0 auto;
     }
 
@@ -241,6 +241,28 @@
     .token-side[data-selected="true"] { border-color: var(--primary); box-shadow: inset 0 0 0 2px #c7d2fe; }
     .token-side[data-drop-target="true"] { border-color: var(--teal); background: #ecfeff; }
     .empty-side { align-self: center; color: var(--muted); font-size: .9rem; font-weight: 700; pointer-events: none; }
+    .side-wrap { display: flex; position: relative; min-width: 0; }
+    .side-wrap .token-side { flex: 1 1 auto; padding-right: 2.75rem; }
+    .clear-side-button {
+      position: absolute;
+      top: .4rem;
+      right: .4rem;
+      display: grid;
+      place-items: center;
+      width: 2rem;
+      height: 2rem;
+      padding: 0;
+      border: 2px solid var(--border);
+      border-radius: 50%;
+      background: white;
+      color: var(--muted);
+      font-size: 1.1rem;
+      font-weight: 900;
+      line-height: 1;
+    }
+    .clear-side-button::after { content: ''; position: absolute; inset: -.4rem; border-radius: 50%; }
+    .clear-side-button:not(:disabled):hover { border-color: var(--error); background: #fff1f2; color: var(--error); }
+    .clear-side-button:disabled { opacity: .4; cursor: not-allowed; }
     .workspace-token { min-width: 44px; border-color: #99d7ce; background: #f0fdfa; user-select: none; }
     .token--variable, .variable-y { color: var(--variable); font-weight: 900; }
     .workspace-token[data-selected="true"] { border-color: var(--primary-dark); background: #e0e7ff; box-shadow: 0 0 0 2px #c7d2fe; }
@@ -282,8 +304,17 @@
 
     .active-editor { display: grid; gap: .7rem; }
     .equation-actions { display: flex; flex-wrap: wrap; gap: .7rem; align-items: center; }
-    .equation-actions .check-button { margin-left: auto; }
-    .check-button { min-width: 9rem; }
+    .equation-buttons { display: flex; flex-wrap: wrap; gap: .7rem; justify-content: flex-end; margin-left: auto; }
+    .check-button, .restore-button, .delete-token-button, .flip-button { min-width: 9rem; }
+    .restore-button, .delete-token-button, .flip-button {
+      padding: .65rem 1rem;
+      border: 2px solid var(--primary);
+      background: white;
+      color: var(--primary-dark);
+      font-weight: 800;
+    }
+    .restore-button:not(:disabled):hover, .delete-token-button:not(:disabled):hover, .flip-button:not(:disabled):hover { background: #eef2ff; }
+    .restore-button:disabled, .delete-token-button:disabled, .flip-button:disabled { border-color: var(--border); color: var(--muted); box-shadow: none; }
     .side-selector, .token-toolbar { display: flex; flex-wrap: wrap; gap: .45rem; align-items: center; }
     .side-selector legend { padding: 0; font-weight: 850; }
     .side-choice { min-width: 44px; padding: .45rem .7rem; border: 2px solid var(--border); background: white; color: var(--text); font-weight: 800; }
@@ -326,6 +357,29 @@
       overflow-wrap: anywhere;
     }
     .completion-panel .primary-button { min-width: 11rem; }
+
+    .toast {
+      position: fixed;
+      top: max(1rem, env(safe-area-inset-top));
+      right: max(1rem, env(safe-area-inset-right));
+      z-index: 30;
+      max-width: min(92vw, 28rem);
+      padding: .85rem 1.15rem;
+      border: 2px solid var(--success);
+      border-radius: var(--radius-md);
+      background: #f0fdf4;
+      color: #14532d;
+      box-shadow: 0 12px 30px rgb(20 83 45 / 22%);
+      font-weight: 850;
+      text-align: center;
+      pointer-events: none;
+      opacity: 0;
+      transform: translateY(-.75rem);
+      transition: opacity .18s ease, transform .18s ease;
+    }
+
+    .toast[data-visible="true"] { opacity: 1; transform: translateY(0); }
+    .toast[hidden] { display: none; }
 
     #confetti-layer {
       position: fixed;
@@ -398,8 +452,8 @@
       .active-equation { grid-template-columns: minmax(0, 1fr) 1.5rem minmax(0, 1fr); gap: .85rem; }
       .active-equation .equals { grid-column: 2; font-size: 1.75rem; }
       .active-equation .token-side { min-height: 5.5rem; }
-      .active-equation .token-side:first-of-type { grid-column: 1; }
-      .active-equation .token-side:last-of-type { grid-column: 3; }
+      .active-equation .side-wrap[data-side="left"] { grid-column: 1; }
+      .active-equation .side-wrap[data-side="right"] { grid-column: 3; }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -472,25 +526,35 @@
               </fieldset>
               <p id="selected-side-status" class="selected-side-status">Adding tokens to the left side.</p>
               <div id="active-equation" class="active-equation" aria-label="Editable equation">
-                <div id="left-token-side" class="token-side" data-side="left" aria-label="Left side tokens" tabindex="-1" aria-describedby="session-feedback"></div>
+                <div class="side-wrap" data-side="left">
+                  <div id="left-token-side" class="token-side" data-side="left" aria-label="Left side tokens" tabindex="-1" aria-describedby="session-feedback"></div>
+                  <button id="clear-left" class="clear-side-button" type="button" data-side="left" aria-label="Clear all tokens from the left side" title="Clear left side"><span aria-hidden="true">×</span></button>
+                </div>
                 <span class="equals" aria-label="equals">=</span>
-                <div id="right-token-side" class="token-side" data-side="right" aria-label="Right side tokens" tabindex="-1" aria-describedby="session-feedback"></div>
+                <div class="side-wrap" data-side="right">
+                  <div id="right-token-side" class="token-side" data-side="right" aria-label="Right side tokens" tabindex="-1" aria-describedby="session-feedback"></div>
+                  <button id="clear-right" class="clear-side-button" type="button" data-side="right" aria-label="Clear all tokens from the right side" title="Clear right side"><span aria-hidden="true">×</span></button>
+                </div>
               </div>
               <div class="equation-actions">
                 <div id="trash-zone" class="trash-zone" aria-label="Trash zone. Drop a token here to delete it.">
                   <span aria-hidden="true">🗑️</span>
                   <span>Trash — drop a token here to erase it.</span>
                 </div>
-                <button id="check-button" class="primary-button check-button" type="button" aria-label="Check this equation">Check</button>
+                <div class="equation-buttons">
+                  <button id="delete-token" class="delete-token-button" type="button">Delete selected token</button>
+                  <button id="restore-button" class="restore-button" type="button" aria-label="Restore the previous step's tokens into both side boxes"><span aria-hidden="true">↺ </span>Restore previous step</button>
+                  <button id="flip-sides" class="flip-button" type="button" aria-label="Swap the token contents of the left and right sides"><span aria-hidden="true">⇄ </span>Flip sides</button>
+                  <button id="check-button" class="primary-button check-button" type="button" aria-label="Check this equation">Check</button>
+                </div>
               </div>
               <div class="token-toolbar" aria-label="Selected token controls">
                 <button id="move-left" type="button">Move left</button>
                 <button id="move-right" type="button">Move right</button>
                 <button id="move-to-left" type="button">Move to left side</button>
                 <button id="move-to-right" type="button">Move to right side</button>
-                <button id="delete-token" type="button">Delete selected token</button>
               </div>
-              <p class="editor-help">Tap a token to select it. Use these controls to move or delete it, or drag it with a mouse or touch.</p>
+              <p class="editor-help">Tap a token to select it. Use these controls to move it, Delete selected token to erase it, or drag it with a mouse or touch.</p>
             </div>
           </article>
         </div>
@@ -514,6 +578,8 @@
     </div>
   </main>
 
+  <div id="toast" class="toast" aria-hidden="true" hidden></div>
+
   <script>
     'use strict';
 
@@ -522,6 +588,8 @@
     const DUPLICATE_CHECK_WINDOW_MS = 500;
     const CONFETTI_PIECE_COUNT = 42;
     const CONFETTI_LIFETIME_MS = 3200;
+    const TOAST_DURATION_MS = 2600;
+    const TOAST_EXIT_MS = 200;
     const CONFETTI_COLORS = ['#4338ca', '#0f766e', '#f59e0b', '#c2410c', '#15803d', '#db2777'];
     const CANDIDATE_EMPTY_SIDE_MESSAGE = 'Let’s put something on both sides of the equals sign.';
     const INEQUIVALENT_MESSAGE = 'That changes the answer for y. Try doing the same operation to both sides!';
@@ -1304,6 +1372,7 @@
       feedback: { kind: 'info', message: '', side: null, scope: 'setup' },
       lastAcceptedCheck: null,
       sourceStepSignature: null,
+      sourceTokens: null,
       animateLockedRowId: null,
       celebrationPlayed: false,
     };
@@ -1320,9 +1389,14 @@
     const activeStepNumberElement = document.querySelector('#active-step-number');
     const completionPanelElement = document.querySelector('#completion-panel');
     const completionAnswerElement = document.querySelector('#completion-answer');
+    const toastElement = document.querySelector('#toast');
     const solveAnotherButton = document.querySelector('#solve-another-button');
     const sessionFeedbackElement = document.querySelector('#session-feedback');
     const checkButton = document.querySelector('#check-button');
+    const restoreButton = document.querySelector('#restore-button');
+    const flipSidesButton = document.querySelector('#flip-sides');
+    const clearLeftButton = document.querySelector('#clear-left');
+    const clearRightButton = document.querySelector('#clear-right');
     const resetButton = document.querySelector('#reset-button');
     const paletteElement = document.querySelector('#palette');
     const toolboxCardElement = document.querySelector('.toolbox-card');
@@ -1341,6 +1415,8 @@
     let pendingFocus = null;
     let ignorePaletteClickUntil = 0;
     let celebrationTimer = null;
+    let toastTimer = null;
+    let toastExitTimer = null;
     let audioContext = null;
 
     function isDraftEquationPresent() {
@@ -1523,7 +1599,7 @@
       }
     }
 
-    function playCelebrationChime() {
+    function scheduleToneSequence(notes) {
       try {
         const AudioContextClass = window.AudioContext || window.webkitAudioContext;
         if (!AudioContextClass) return;
@@ -1535,14 +1611,6 @@
             const context = audioContext;
             if (!context || context.state === 'closed') return;
             const startTime = context.currentTime + 0.03;
-            const notes = [
-              { frequency: 523.25, offset: 0, duration: 0.24, peak: 0.16 },   // C5
-              { frequency: 659.25, offset: 0.09, duration: 0.25, peak: 0.17 }, // E5
-              { frequency: 783.99, offset: 0.18, duration: 0.26, peak: 0.18 }, // G5
-              { frequency: 1046.5, offset: 0.3, duration: 0.44, peak: 0.2 },   // C6
-              { frequency: 1318.51, offset: 0.3, duration: 0.34, peak: 0.1 },  // E6
-              { frequency: 1567.98, offset: 0.3, duration: 0.28, peak: 0.06 }, // G6
-            ];
             notes.forEach((note) => {
               const noteStart = startTime + note.offset;
               const oscillator = context.createOscillator();
@@ -1562,7 +1630,7 @@
               });
             });
           } catch (error) {
-            // Audio is optional; completion must never depend on it.
+            // Audio is optional; progress must never depend on it.
           }
         };
         if (audioContext.state === 'suspended') {
@@ -1577,12 +1645,69 @@
       }
     }
 
+    function playStepSuccessChime() {
+      scheduleToneSequence([
+        { frequency: 659.25, offset: 0, duration: 0.14, peak: 0.13 },    // E5
+        { frequency: 987.77, offset: 0.09, duration: 0.22, peak: 0.15 }, // B5
+      ]);
+    }
+
+    function playCelebrationChime() {
+      scheduleToneSequence([
+        { frequency: 523.25, offset: 0, duration: 0.24, peak: 0.16 },   // C5
+        { frequency: 659.25, offset: 0.09, duration: 0.25, peak: 0.17 }, // E5
+        { frequency: 783.99, offset: 0.18, duration: 0.26, peak: 0.18 }, // G5
+        { frequency: 1046.5, offset: 0.3, duration: 0.44, peak: 0.2 },   // C6
+        { frequency: 1318.51, offset: 0.3, duration: 0.34, peak: 0.1 },  // E6
+        { frequency: 1567.98, offset: 0.3, duration: 0.28, peak: 0.06 }, // G6
+      ]);
+    }
+
+    function clearToast() {
+      if (toastTimer !== null) {
+        window.clearTimeout(toastTimer);
+        toastTimer = null;
+      }
+      if (toastExitTimer !== null) {
+        window.clearTimeout(toastExitTimer);
+        toastExitTimer = null;
+      }
+      toastElement.dataset.visible = 'false';
+      toastElement.hidden = true;
+    }
+
+    function hideToast() {
+      toastTimer = null;
+      toastElement.dataset.visible = 'false';
+      toastExitTimer = window.setTimeout(() => {
+        toastExitTimer = null;
+        toastElement.hidden = true;
+      }, TOAST_EXIT_MS);
+    }
+
+    function showToast(message) {
+      if (toastTimer !== null) {
+        window.clearTimeout(toastTimer);
+        toastTimer = null;
+      }
+      if (toastExitTimer !== null) {
+        window.clearTimeout(toastExitTimer);
+        toastExitTimer = null;
+      }
+      toastElement.textContent = message;
+      toastElement.hidden = false;
+      void toastElement.offsetWidth;
+      toastElement.dataset.visible = 'true';
+      toastTimer = window.setTimeout(hideToast, TOAST_DURATION_MS);
+    }
+
     function clearCelebration() {
       if (celebrationTimer !== null) {
         window.clearTimeout(celebrationTimer);
         celebrationTimer = null;
       }
       clearConfettiLayer();
+      clearToast();
       if (audioContext) {
         try {
           if (audioContext.state !== 'closed' && typeof audioContext.close === 'function') {
@@ -1657,6 +1782,14 @@
       rightTokenSide.dataset.dropTarget = String(sideDropTarget === 'right');
       renderToolbar();
       checkButton.disabled = !isStarted || !state.activeRow;
+      restoreButton.disabled = !isStarted
+        || !state.activeRow
+        || rowSignature(state.activeRow) === previousStepSignature();
+      const leftEmpty = !state.activeRow || state.activeRow.leftTokens.length === 0;
+      const rightEmpty = !state.activeRow || state.activeRow.rightTokens.length === 0;
+      clearLeftButton.disabled = !isStarted || leftEmpty;
+      clearRightButton.disabled = !isStarted || rightEmpty;
+      flipSidesButton.disabled = !isStarted || !state.activeRow || (leftEmpty && rightEmpty);
       trashZone.dataset.dropTarget = String(Boolean(state.drag && state.drag.active && state.drag.target && state.drag.target.kind === 'trash'));
       updateStickyToolboxHeight();
       if (pendingFocus) {
@@ -1761,7 +1894,8 @@
       const target = document.elementFromPoint(clientX, clientY);
       if (!target) return null;
       if (target.closest('#trash-zone')) return { kind: 'trash' };
-      const sideElement = target.closest('.token-side');
+      const sideElement = target.closest('.token-side')
+        || (target.closest('.side-wrap') && target.closest('.side-wrap').querySelector('.token-side'));
       if (!sideElement) return null;
       const side = sideElement.dataset.side;
       const buttons = [...sideElement.querySelectorAll('.workspace-token')].filter((button) => !state.drag || button.dataset.tokenId !== state.drag.tokenId);
@@ -1899,6 +2033,53 @@
       return state.submittedEquation || null;
     }
 
+    function previousStepTokens() {
+      if (state.lockedRows.length > 0) {
+        const row = state.lockedRows[state.lockedRows.length - 1];
+        return { leftTokens: row.leftTokens, rightTokens: row.rightTokens };
+      }
+      return state.sourceTokens;
+    }
+
+    function clearSide(side) {
+      if (!canEditActiveRow()) return;
+      const key = side === 'left' ? 'leftTokens' : 'rightTokens';
+      if (state.activeRow[key].length === 0) return;
+      cleanupDrag();
+      state.activeRow = { ...state.activeRow, [key]: [] };
+      state.selectedToken = null;
+      setFeedback('info', `Cleared all tokens from the ${side} side. Add new tokens or restore the previous step.`, null, 'session');
+      render();
+      const sideElement = side === 'left' ? leftTokenSide : rightTokenSide;
+      sideElement.scrollIntoView({ block: 'nearest' });
+      sideElement.focus();
+    }
+
+    function flipSides() {
+      if (!canEditActiveRow()) return;
+      const { leftTokens, rightTokens } = state.activeRow;
+      if (leftTokens.length === 0 && rightTokens.length === 0) return;
+      cleanupDrag();
+      state.activeRow = { ...state.activeRow, leftTokens: rightTokens, rightTokens: leftTokens };
+      state.selectedToken = null;
+      setFeedback('info', 'Flipped the left and right sides.', null, 'session');
+      render();
+    }
+
+    function restorePreviousStep() {
+      if (!canEditActiveRow()) return;
+      const previous = previousStepTokens();
+      if (!previous) return;
+      cleanupDrag();
+      state.activeRow = createActiveRow(previous.leftTokens, previous.rightTokens);
+      state.selectedToken = null;
+      state.lastAcceptedCheck = null;
+      setFeedback('info', 'Restored the previous step. Change it before checking.', null, 'session');
+      render();
+      leftTokenSide.scrollIntoView({ block: 'nearest' });
+      leftTokenSide.focus();
+    }
+
     function triggerActiveShake() {
       if (activeStepElement.hidden) return;
       activeStepElement.removeAttribute('data-shake');
@@ -1933,6 +2114,7 @@
         state.activeRow = null;
         state.lastAcceptedCheck = null;
         setFeedback('info', '', null, 'session');
+        showToast('🎉 You solved it!');
         render();
         completionPanelElement.scrollIntoView({ block: 'nearest' });
         completionPanelElement.focus();
@@ -1943,6 +2125,8 @@
       state.activeRow = createActiveRow(state.activeRow.leftTokens, state.activeRow.rightTokens);
       state.lastAcceptedCheck = { signature, at: Date.now() };
       setFeedback('info', 'Great equivalent equation!', null, 'session');
+      showToast(`✓ Step ${state.lockedRows.length + 1} locked! Great equivalent equation.`);
+      playStepSuccessChime();
       render();
       leftTokenSide.scrollIntoView({ block: 'nearest' });
       leftTokenSide.focus();
@@ -1996,6 +2180,7 @@
       state.lockedRows = [];
       state.lastAcceptedCheck = null;
       state.sourceStepSignature = null;
+      state.sourceTokens = null;
       state.animateLockedRowId = null;
       if (!analysis.ok) {
         state.mode = 'landing';
@@ -2012,6 +2197,10 @@
       state.submittedEquation = analysis.value.displayEquation;
       state.sourceEquation = analysis.value;
       state.sourceStepSignature = rowSignature(workspace);
+      state.sourceTokens = {
+        leftTokens: copyTokensForNewRow(workspace.leftTokens),
+        rightTokens: copyTokensForNewRow(workspace.rightTokens),
+      };
       state.activeRow = createActiveRow(workspace.leftTokens, workspace.rightTokens);
       setFeedback('info', 'Your first equation is ready. Choose a side, then tap or drag tokens to edit Step 2.', null, 'session');
       render();
@@ -2033,6 +2222,7 @@
       state.selectedToken = null;
       state.lastAcceptedCheck = null;
       state.sourceStepSignature = null;
+      state.sourceTokens = null;
       state.animateLockedRowId = null;
       setFeedback('info', 'Ready for a new equation.', null, 'setup');
       render();
@@ -2059,6 +2249,8 @@
     resetButton.addEventListener('click', resetSession);
     solveAnotherButton.addEventListener('click', resetSession);
     checkButton.addEventListener('click', checkActiveEquation);
+    restoreButton.addEventListener('click', restorePreviousStep);
+    flipSidesButton.addEventListener('click', flipSides);
     selectLeftButton.addEventListener('click', () => setSelectedSide('left'));
     selectRightButton.addEventListener('click', () => setSelectedSide('right'));
     paletteElement.addEventListener('click', (event) => {
@@ -2068,6 +2260,11 @@
     });
     document.querySelector('#active-equation').addEventListener('click', (event) => {
       if (state.drag && state.drag.active) return;
+      const clearButton = event.target.closest('.clear-side-button');
+      if (clearButton) {
+        clearSide(clearButton.dataset.side);
+        return;
+      }
       const button = event.target.closest('.workspace-token');
       if (button) {
         selectToken(button.dataset.side, button.dataset.tokenId);

@@ -89,7 +89,7 @@ The product is delivered in five sequential, independently reviewable milestones
 ├───────────────────────────────────────────────────────────────────┤
 │  YOUR SOLVING PATH                                                 │
 │  Step 1  🔒              2y − 3       =       8                   │
-│  Step 2                  [ drop tokens ] = [ drop tokens ] [Check] │
+│  Step 2                  [ drop tokens ] = [ drop tokens ] [↺][Check] │
 │                            ↑ selected/focused side                │
 ├───────────────────────────────────────────────────────────────────┤
 │  💡 Build an equation that still has the same answer for y.        │
@@ -105,7 +105,7 @@ On narrow screens, the header remains compact; equation input and Start button s
 ### Interaction flow
 1. **Landing/setup:** Show a friendly title, example placeholder, a short equivalence tip, and an input with Start Solving disabled until non-empty.
 2. **Start:** Parse and validate the entered equation. On success, normalize display symbols, add locked Step 1, expose the toolbox/workspace, create an active Step 2 prefilled with token copies of Step 1, and focus its LHS. On failure, retain input and give an inline, specific correction message.
-3. **Build:** A learner drags a palette token into either active side, drags existing tokens to reorder or move across sides, or drags a token into the labeled trash zone. Tapping/clicking a palette token inserts it at the end of the selected side; tapping a token selects it for a clearly labeled Delete selected token action. This makes all core behavior usable without a drag gesture.
+3. **Build:** A learner drags a palette token into either active side, drags existing tokens to reorder or move across sides, or drags a token into the labeled trash zone. Tapping/clicking a palette token inserts it at the end of the selected side; tapping a token selects it for a clearly labeled Delete selected token action. This makes all core behavior usable without a drag gesture. If edits leave the active row messy, a Restore previous step button beside Check replaces both active sides with fresh token copies of the latest locked row (Step 1 for the first editable row); it never affects history.
 4. **Check:** The app rejects an active row that is exactly the previous step—token-for-token, or differing only by notation that normalizes to the same displayed equation—keeping it editable with same-step feedback. Otherwise it validates each side’s syntax, then reduces both sides to exact affine forms and compares the resulting unique solution to Step 1. Valid rows lock with a green check animation and create a duplicated, editable next row. Invalid rows remain editable, shake gently, describe the relevant issue, and set focus to the affected side or feedback text.
 5. **Win:** When the valid active equation is exactly `y = rational value` (coefficient `1` on the left and no `y` on the right), lock it, announce the answer, show confetti and praise, and play a safely-caught short Web Audio chime. The celebration panel offers “Solve another!” to reset safely.
 
@@ -121,9 +121,12 @@ On narrow screens, the header remains compact; equation input and Start button s
 - A token is a semantic button/list item with its token type and a readable aria-label (for example, “multiply” rather than only `×`).
 - The variable `y` is red in the palette, active tokens, and rendered equations; multiplication `×` remains dark so the similar glyphs are easier to distinguish. Shape and accessible labels remain the primary distinction.
 - Active LHS and RHS are independently labeled droppable token lists separated by a static equality sign. They begin as tokenized copies of the latest accepted row.
-- A visible trash zone accepts dragging; keyboard/tap deletion is an equivalent path. Deleted items disappear only from the active row.
+- A visible trash zone accepts dragging; keyboard/tap deletion is an equivalent path. The Delete selected token button sits beside the trash zone and before Restore previous step. Deleted items disappear only from the active row.
 - While a session is active, the toolbox pins beneath the top of the viewport during vertical scrolling so the palette stays reachable; it returns to normal flow at the top and becomes static once the session is complete. On screens narrower than 600px it compacts its padding and helper text. The app reserves the card's measured height in scroll offsets so focused tokens, side selectors, and feedback are not obscured.
 - Prior rows are immutable and cannot be edited, reordered, or deleted.
+- A Restore previous step button beside Check replaces both active side lists with fresh token copies of the most recent locked step (Step 1 for the first editable row). It is disabled when the active row already matches that step, clears any selected token, and leaves locked history untouched.
+- Each active side has a small Clear (×) button in its top-right corner that empties only that side and is disabled while the side is already empty. Clearing clears any selected token and never alters locked history.
+- A Flip sides button beside Restore previous step swaps the complete token contents of the two active sides. It is disabled when both sides are empty, clears any selected token, and never alters locked history.
 
 ### Parsing and validation
 - Token strings are joined and parsed with precedence: parentheses; unary `+`/`-`; multiplication/division including implicit multiplication; addition/subtraction.
@@ -138,7 +141,8 @@ On narrow screens, the header remains compact; equation input and Start button s
 ### Feedback and celebration
 - Syntax messages include child-friendly, actionable wording, such as “This side needs a number or `y` after that operation.”, “Let’s close each set of parentheses.”, and “We can’t divide by zero.”
 - An inequivalence message says: “That changes the answer for `y`. Try doing the same operation to both sides!” Do not claim an operation was asymmetric unless positively established.
-- Success feedback includes a check icon, text such as “Great equivalent equation!”, and a short animation that honors reduced motion.
+- Success feedback includes a check icon, text such as “Great equivalent equation!”, a brief confirmation toast that auto-dismisses, a short best-effort success chime, and a short animation that honors reduced motion. The final step uses the celebration chime in place of the step chime.
+- Success toasts are visual reinforcement only (`aria-hidden`); the existing polite live region carries the accessible success message, avoiding duplicate announcements.
 - Celebration uses no fetched assets, cannot block completion if AudioContext is unavailable, and has visible textual success independent of sound/confetti.
 
 ## Non-Functional Requirements
@@ -183,11 +187,13 @@ The dependency-free release uses documented human acceptance passes. Parser/rati
 3. Use mouse drag, touch/pointer emulation, palette tap insertion, token reordering, side-to-side move, and deletion/trash. Verify row state after each action.
 4. Check a malformed side such as `2y −`; verify the row remains editable, has error styling/announcement, and receives no new history row.
 5. Submit an algebraically inequivalent valid equation such as `2y - 3 = 9`; verify rejection and answer-preservation hint.
-6. Submit equivalent steps for `2y - 3 = 8`, including `2y = 11`, then `y = 11 ÷ 2`; verify both lock and final celebration fires once.
+6. Submit equivalent steps for `2y - 3 = 8`, including `2y = 11`, then `y = 11 ÷ 2`; verify each success shows the confirmation toast and, when audio is available, a short success chime; verify both lock and final celebration fires once.
 7. Repeat with `2y = 11`, `y = 5.5`, and `y = 11/2`; verify exact comparison rather than floating-point mismatch. Verify supported mixed-fraction setup behavior separately.
 8. Start direct reciprocal sources `2/y = 12` and `12 = 2/y`; verify each begins normally without revealing the exact answer. Try invalid source equations: `y² = 4`, `y = y`, `y = y + 1`, `2y =`, `y/0 = 1`, `2/(y + 1) = 3`, `1/y + 1/(y - 1) = 2`, and inputs with unknown symbols; verify understandable rejection without page failure.
 9. At 320px and desktop width, verify no horizontal scrolling and usable controls. Scroll the solving path and confirm the toolbox stays reachable without covering the active tokens, then confirm it releases to normal flow on completion. Tab through all controls and trigger non-drag alternatives; inspect focus visibility and live feedback.
 10. Enable reduced motion and verify success/error/celebration remain understandable without disruptive movement. Test with audio unavailable or blocked; verify visual success still completes.
+11. Before any lock, edit the active row and use Restore previous step; verify both sides return to Step 1, the button disables itself, and focus moves to the left side. Lock a step, mess up the new active row, and verify Restore previous step returns to that locked step rather than Step 1, without altering locked history.
+12. Use each side's Clear (×) button and the Flip sides button; verify a clear empties only its own side, a flip swaps both sides, both actions clear the selected token, their disabled states match the contents, focus is not lost, and locked history is unchanged.
 
 ### Future automated coverage (ask first)
 If a test tool is approved, add unit tests for tokenizer/parser precedence, affine reduction, fraction normalization, unique-solution solving, same-solution comparisons, malformed input, and win-form detection. Add browser interaction tests for complete successful and invalid flows.
