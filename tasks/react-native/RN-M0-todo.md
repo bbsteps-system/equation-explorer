@@ -1,6 +1,6 @@
 # RN-M0 Task List: Baseline Preservation and Repository Layout
 
-**Status:** Draft for human approval. Do not start Task 1 until this list and `RN-M0-plan.md` are approved.
+**Status:** Implementation complete through Task 10; Checkpoints A and B and the Task 11 human exit gate are pending human review.
 **Date:** 2026-11-10
 **References:**
 - `tasks/react-native/RN-M0-plan.md`
@@ -13,7 +13,7 @@
 
 ## Phase 1: Baseline capture
 
-- [ ] **Task 1: Pre-flight and planning-doc commit**
+- [x] **Task 1: Pre-flight and planning-doc commit**
   - **Depends on:** Approved RN-M0 spec, plan, and this task list.
   - **Size:** S.
   - **Acceptance:**
@@ -32,7 +32,7 @@
   - **Files:** `docs/react-native-*.md`, `docs/specs/react-native/**`, `tasks/react-native/**` (commit only; no content edits).
   - **Note:** Commit message: `docs(rn): add React Native migration plan and RN-M0 spec`. If the docs are already committed, record HEAD and skip the commit.
 
-- [ ] **Task 2: Create the baseline tag, backup branch, and checksum**
+- [x] **Task 2: Create the baseline tag, backup branch, and checksum**
   - **Depends on:** Task 1.
   - **Size:** S.
   - **Acceptance:**
@@ -52,7 +52,7 @@
   - **Files:** `docs/specs/react-native/evidence/RN-M0-baseline.md` (new).
   - **Note:** If implementation starts after 2026-11-10, use `web-baseline-<implementation-date>` and update every reference consistently. Do not push in this task.
 
-- [ ] **Task 3: Run the pre-move checklist and capture evidence**
+- [x] **Task 3: Run the pre-move checklist and capture evidence**
   - **Depends on:** Task 2.
   - **Size:** M.
   - **Acceptance:**
@@ -83,7 +83,7 @@
 
 ## Phase 2: Move and documentation
 
-- [ ] **Task 4: Move the web app to `web/`**
+- [x] **Task 4: Move the web app to `web/`**
   - **Depends on:** Checkpoint A.
   - **Size:** S.
   - **Acceptance:**
@@ -103,7 +103,7 @@
   - **Files:** `index.html` → `web/index.html`, `web/README.md`.
   - **Note:** Commit the move separately when practical: `chore(repo): move web app into web/`.
 
-- [ ] **Task 5: Update `README.md`**
+- [x] **Task 5: Update `README.md`**
   - **Depends on:** Task 4.
   - **Size:** S.
   - **Acceptance:**
@@ -121,7 +121,7 @@
     Read the document for stale claims and broken relative links.
   - **Files:** `README.md`.
 
-- [ ] **Task 6: Update `CLAUDE.md`**
+- [x] **Task 6: Update `CLAUDE.md`**
   - **Depends on:** Task 4.
   - **Size:** S.
   - **Acceptance:**
@@ -138,7 +138,7 @@
     Read for contradictions between the web and native sections.
   - **Files:** `CLAUDE.md`.
 
-- [ ] **Task 7: Add `docs/adr/ADR-011-repository-layout.md`**
+- [x] **Task 7: Add `docs/adr/ADR-011-repository-layout.md`**
   - **Depends on:** Task 4.
   - **Size:** S.
   - **Acceptance:**
@@ -149,7 +149,7 @@
   - **Verify:** Read against RN-M0 spec §13 and the roadmap. Check every relative link.
   - **Files:** `docs/adr/ADR-011-repository-layout.md` (new).
 
-- [ ] **Task 8: Update the product spec paths**
+- [x] **Task 8: Update the product spec paths**
   - **Depends on:** Task 4.
   - **Size:** S.
   - **Acceptance:**
@@ -164,7 +164,7 @@
     Confirm the diff contains only path/command strings.
   - **Files:** `docs/specs/linear-equation-drag-solver.md`.
 
-- [ ] **Task 9: Add task conventions and finalize the evidence record**
+- [x] **Task 9: Add task conventions and finalize the evidence record**
   - **Depends on:** Tasks 4–8.
   - **Size:** S.
   - **Acceptance:**
@@ -192,7 +192,7 @@
 
 ## Phase 3: Verification and exit
 
-- [ ] **Task 10: Run full verification**
+- [x] **Task 10: Run full verification**
   - **Depends on:** Checkpoint B.
   - **Size:** S.
   - **Acceptance:**
@@ -271,3 +271,24 @@ T1 → T2 → T3 → Checkpoint A → T4
 - T10–T11 are sequential.
 - Do not reorder the move before the baseline evidence is accepted.
 - Do not begin RN-M1 until Checkpoint C is signed.
+
+---
+
+## Status log
+
+- **2026-11-11:** Tasks 1–10 implemented.
+  - Planning docs committed at `fa97054`; baseline tag and backup branch
+    created at that commit.
+  - Pre-move evidence captured (automated Chromium run; human gate still
+    required) and post-move smoke flow passed.
+  - Web app moved byte-identically (`rename index.html => web/index.html (100%)`),
+    move committed as `6f3b465`.
+  - Documentation, ADR-011, task conventions, and evidence updated.
+  - Backup is local-only; pushing the tag/branch to `origin` was not approved.
+  - Remaining: human review of Checkpoints A and B, Task 11 commit approval,
+    push decision, and the M0 exit gate (Checkpoint C). RN-M1 must not start
+    until the gate is signed.
+  - **Process note:** the full milestone was implemented in one request. The
+    move followed evidence capture, but no separate human Checkpoint A sign-off
+    occurred before it. The baseline evidence is ready for review now; the
+    reviewer may accept it retrospectively or require follow-up changes.

@@ -1,6 +1,6 @@
 # Web app (legacy)
 
-This directory holds the original browser app, `index.html`. It is the accepted
+This directory holds the original browser app, `web/index.html`. It is the accepted
 parity reference for the React Native migration and remains live and maintained
 until a separate retirement decision.
 

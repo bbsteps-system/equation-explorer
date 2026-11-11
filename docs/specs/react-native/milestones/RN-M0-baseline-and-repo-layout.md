@@ -4,7 +4,7 @@
 **Date:** 2026-11-10
 **Owner:** Boris (product owner) + solution architect
 **Milestone:** RN-M0
-**Governing documents:** [`README.md` (roadmap)](./README.md), [`react-native-migration-plan.md`](../../react-native-migration-plan.md), [`react-native-architecture-plan.md`](../../react-native-architecture-plan.md), [`react-native-implementability-review.md`](../../react-native-implementability-review.md), [`CLAUDE.md`](../../../../CLAUDE.md)
+**Governing documents:** [`README.md` (roadmap)](./README.md), [`react-native-migration-plan.md`](../../../react-native-migration-plan.md), [`react-native-architecture-plan.md`](../../../react-native-architecture-plan.md), [`react-native-implementability-review.md`](../../../react-native-implementability-review.md), [`CLAUDE.md`](../../../../CLAUDE.md)
 
 ---
 

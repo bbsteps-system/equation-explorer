@@ -15,7 +15,7 @@ Success means a child can use the app without an account or installation, see a 
 - As an adult supporting the learner, I can use the app entirely offline after loading its single file and understand why unsupported equations are declined.
 
 ## Assumptions and scope
-- The deliverable is a standalone `index.html`, with inline CSS and JavaScript, opened directly or served as static content.
+- The deliverable is a standalone `web/index.html`, with inline CSS and JavaScript, opened directly or served as static content.
 - Supported inputs describe either a linear equation in exactly one variable, `y`, with one unique real solution, or the limited direct-reciprocal source form defined below.
 - Accepted notation: integers; terminating decimals; `+`, `-`, `×`/`*`, `÷`/`/`; parentheses; `y`; unary signs; and implicit multiplication (`2y`, `2(y + 1)`). Whitespace is ignored except where used to recognize a mixed-fraction display value.
 - In addition to linear sources, setup accepts a direct reciprocal equation `c / y = d` or `d = c / y`, where `c` and `d` are nonzero constant expressions. It solves exactly as `y = c / d` with the retained domain restriction `y ≠ 0`. This narrow exception does not permit other variable denominators such as `2 / (y + 1)`, `1 / y + 1 / (y - 1)`, or reciprocal expressions on both sides.
@@ -24,7 +24,7 @@ Success means a child can use the app without an account or installation, see a 
 - No backend, account, persistence, tracking, external asset, third-party library, or build tooling is included.
 
 ## Tech Stack
-- HTML5 semantic markup in `index.html`
+- HTML5 semantic markup in `web/index.html`
 - CSS3 custom properties, flexbox/grid, responsive media queries, animations, and `prefers-reduced-motion`
 - Vanilla ES2020+ JavaScript using Pointer Events for touch/mouse token manipulation
 - Web Audio API for an optional synthesized celebration sound
@@ -34,7 +34,7 @@ Success means a child can use the app without an account or installation, see a 
 ## Commands
 ```sh
 # Serve the standalone app locally (recommended for consistent browser behavior)
-python3 -m http.server 8000 --directory .
+python3 -m http.server 8000 --directory web
 
 # Open the application
 open http://localhost:8000/
@@ -47,7 +47,7 @@ There is no package installation, build, lint, or automated-test command in the 
 
 ## Project Structure
 ```text
-index.html                                      # Complete shipped application: markup, styles, behavior
+web/index.html                                  # Complete shipped application: markup, styles, behavior
 CLAUDE.md                                       # Persistent project conventions for future contributors
 docs/
   specs/
@@ -182,7 +182,7 @@ Do not rely on implicit type conversion for mathematics, manipulate `innerHTML` 
 The dependency-free release uses documented human acceptance passes. Parser/rational code must be designed as pure functions so an approved later test runner can cover it directly. Each milestone contains its own manual demo script; its test cases accumulate into the final release checklist.
 
 ### Final release checklist
-1. Open `index.html` directly and through `python3 -m http.server 8000 --directory .`; verify no console errors.
+1. Open `web/index.html` directly and through `python3 -m http.server 8000 --directory web`; verify no console errors.
 2. Start `2y - 3 = 8`; confirm a locked Step 1 and editable Step 2 copied from it.
 3. Use mouse drag, touch/pointer emulation, palette tap insertion, token reordering, side-to-side move, and deletion/trash. Verify row state after each action.
 4. Check a malformed side such as `2y −`; verify the row remains editable, has error styling/announcement, and receives no new history row.

@@ -2,7 +2,7 @@
 
 **Status:** Proposed. No implementation is authorized until this roadmap and the M0 spec are approved.
 **Date:** 2026-11-10
-**Companions:** [`../../react-native-migration-plan.md`](../../react-native-migration-plan.md), [`../../react-native-architecture-plan.md`](../../react-native-architecture-plan.md), [`../../react-native-requirements-open-questions.md`](../../react-native-requirements-open-questions.md), [`../../react-native-implementability-review.md`](../../react-native-implementability-review.md)
+**Companions:** [`../../react-native-migration-plan.md`](../../../react-native-migration-plan.md), [`../../react-native-architecture-plan.md`](../../../react-native-architecture-plan.md), [`../../react-native-requirements-open-questions.md`](../../../react-native-requirements-open-questions.md), [`../../react-native-implementability-review.md`](../../../react-native-implementability-review.md)
 **Target:** A native iOS and Android app built with React Native + TypeScript + Expo modules, tablet-first with phone support, single light theme, New Architecture, local Xcode/Gradle builds, no WebView.
 
 ---
@@ -584,7 +584,7 @@ These apply to every milestone and must appear in each spec's Boundaries section
 
 ## 7. Recommended first actions
 
-1. Approve this roadmap and the [implementability review](../../react-native-implementability-review.md).
+1. Approve this roadmap and the [implementability review](../../../react-native-implementability-review.md).
 2. Run spec-driven development for **RN-M0**: produce `docs/specs/react-native/milestones/RN-M0-baseline-and-repo-layout.md`, then `tasks/react-native/RN-M0-plan.md` and `tasks/react-native/RN-M0-todo.md`.
 3. Execute RN-M0: tag, back up, capture baseline evidence, move the web app, update commands/docs, and record the layout ADR.
 4. Only after the M0 gate, run spec-driven development for **RN-M1** (foundation + spike). Do not scaffold the production app before the M0 layout is approved.
